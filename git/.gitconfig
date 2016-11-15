@@ -1,0 +1,22 @@
+[user]
+  name = Henry Snopek
+  email = hhsnopek@gmail.com
+  signingkey = NoTodayGoodSir
+[core]
+  excludesfile = ~/.gitignore
+[push]
+  default = simple
+[filter "lfs"]
+  clean = git-lfs clean -- %f
+  smudge = git-lfs smudge -- %f
+  required = true
+[merge]
+  tool = vimdiff
+[mergetool]
+  prompt = true
+[mergetool "vimdiff"]
+  cmd = nvim -O -d $BASE $LOCAL $REMOTE $MERGED -c '$wincmd w' -c 'wincmd J'
+[status]
+  submoduleSummary = true
+[commit]
+  gpgsign = true
