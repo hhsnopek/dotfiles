@@ -38,6 +38,7 @@ export EDITOR="nvim"
 alias vim="nvim"
 if [[ ! -z ${NVIM_LISTEN_ADDRESS+x} ]]; then
   alias nvim="nvr" # open file if current terminal instance is in neovim
+  export EDITOR="nvr"
 fi
 
 # std
@@ -53,6 +54,10 @@ alias branches="git branch -v"
 alias remotes="git remote -v"
 alias rebasef='git checkout master && git pull && git checkout - && git rebase master'
 alias fp='git fetch origin; git pull origin'
+alias gs='git status'
+alias gb='git branch -v'
+alias gc='git checkout'
+alias gd='git diff'
 
 # fuck
 alias fuck='eval $(thefuck $(fc -ln -1 | tail -n 1)); fc -R'
@@ -65,11 +70,11 @@ alias drmi='docker rmi $(docker images -q)'
 # misc
 export PATH="$PATH:/Users/henrysnopek/.luarocks/bin"
 export PATH="$PATH:/Applications/Postgres.app/Contents/Versions/latest/bin"
+export FIGNORE="$FIGNORE:DS_Store"
 
 # brew
 export PATH="$PATH:@@HOMEBREW_PREFIX@@/bin"
 export PATH="$(brew --prefix coreutils)/libexec/gnubin:/usr/local/bin:$PATH"
-
 
 # mmm wifi
 wifi() {
@@ -228,6 +233,24 @@ gosp() {
   fi
 
   export PATH="$PATH:$GOBIN;"
+}
+
+resolve() {
+  if [[ "$1" == "" ]]; then
+    echo "you must pass a domain."
+  fi
+
+  echo "RESOLVING DOMAIN: $1"
+  echo "----------------------------------------------------------------------"
+  echo "RECORDS..."
+  dig $1
+  echo "----------------------------------------------------------------------"
+  echo "TRACING NAMESERVERS..."
+  dig NS $1 +trace
+
+  echo "----------------------------------------------------------------------"
+  echo "GET request"
+  curl -# --verbose -X GET $1 -o /dev/null
 }
 
 # gpg commit signing

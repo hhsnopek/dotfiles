@@ -1,7 +1,9 @@
 " FileType shortcuts & identifers
 au FileType markdown vnoremap <Space><Bar> :EasyAlign*<Bar><Enter>
 au BufNewFile,BufRead *.sgr set filetype=sugarml.pug.jade.html
+au BufNewFile,BufRead *.jade set filetype=sugarml.pug.jade.html
 au BufNewFile,BufRead *.sss set filetype=sugarss.stylus.css
+au BufNewFile,BufRead *.styl set filetype=sugarss.stylus.css
 
 " Plugins
 call plug#begin()
@@ -19,10 +21,10 @@ Plug 'hhsnopek/vim-firewatch'
 
 " Lazy-load
 Plug 'fatih/vim-go', { 'for': 'go' }
-Plug 'digitaltoad/vim-pug', { 'for': 'sugarml' }
+Plug 'digitaltoad/vim-pug', { 'for': 'sugarml.pug.jade.html' }
 Plug 'othree/yajs.vim', { 'for': 'javascript' }
 Plug 'kchmck/vim-coffee-script', { 'for': 'coffeescript' }
-Plug 'hhsnopek/vim-sugarss', { 'for': 'sugarss' }
+Plug 'hhsnopek/vim-sugarss', { 'for': 'sugarss.stylus.css' }
 Plug 'tpope/vim-markdown', { 'for': 'markdown' }
 Plug 'junegunn/vim-easy-align', { 'for': 'markdown' }
 call plug#end()
@@ -38,10 +40,11 @@ set shiftwidth=2
 set clipboard=unnamed
 set list
 set listchars=tab:▸-
+set t_Co=256
 set ruler
-set termguicolors
 syntax on
 colorscheme firewatch
+hi Search guifg=#ffffff guibg=#D193E2
 
 " Statusline
 set statusline=[%M%n]\ %y\ %t\ %=\ %l:%c
@@ -77,6 +80,7 @@ let g:netrw_list_hide= '.*\.swp$,.DS_Store,*/tmp/*,*.so,*.swp,*.zip,*.git,^\.\=/
 
 " Edit and source vimrc on the fly
 nnoremap <leader>ev :vsp $MYVIMRC<cr>
+nnoremap <leader>eb :vsp ~/.bashrc<cr>
 nnoremap <leader>sv :source $MYVIMRC<cr>
 nnoremap <leader>sc :source ~/projects/dotfiles/.nvim/bundle/vim-firewatch/colors/firewatch.vim<cr>
 nnoremap <leader>eh :vsp ~/projects/dotfiles/.hyper.js<cr>
@@ -84,10 +88,14 @@ nnoremap <leader>eh :vsp ~/projects/dotfiles/.hyper.js<cr>
 " Tab Controls
 nnoremap tne :tabnew<cr>:Explore<cr>
 
-" for command mode
-nnoremap <S-Tab> <<
 " for insert mode
 inoremap <S-Tab> <C-d>
+
+" Operation pinkie
+" nnoremap ; :
+" nnoremap : ;
+" vnoremap ; :
+" vnoremap : ;
 
 " Ctrl-Direction to switch panels when in term emulator
 tnoremap ,j <c-\><c-n><c-w>j
@@ -131,24 +139,24 @@ nnoremap / :set hlsearch<cr>/
 
 " 80th col
 if empty($NVIM_LISTEN_ADDRESS)
-	highlight OverLength ctermbg=174 ctermfg=255
-	match OverLength /\%81v.\+/
+  highlight OverLength ctermbg=174 ctermfg=255
+  match OverLength /\%81v.\+/
 endif
 
 " Syntax Identifier
 nmap <leader>sf :call <SID>SynStack()<CR>
 function! <SID>SynStack()
-	if !exists("*synstack")
-		return
-	endif
-	echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')
+  if !exists("*synstack")
+    return
+  endif
+  echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')
 endfunc
 
 " Toggle Line Wrap
 function! ToggleWrap()
-	if &wrap
-		set nowrap
-	else
-		set wrap
-	endif
+  if &wrap
+    set nowrap
+  else
+    set wrap
+  endif
 endfunc
