@@ -1,7 +1,7 @@
 [user]
   name = Henry Snopek
   email = hhsnopek@gmail.com
-  signingkey = 501E5D50
+  signingkey = 6624B92C
 [core]
   excludesfile = ~/.gitignore
 [push]
@@ -21,4 +21,4 @@
 [commit]
   gpgsign = true
 [init]
-	templatedir = ~/.config/git-templates
+  templatedir = ~/.config/git-templates

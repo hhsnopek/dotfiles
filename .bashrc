@@ -34,17 +34,21 @@ export PATH="$PATH:/Users/henrysnopek/.rvm/gems/ruby-2.3.0@global/bin"
 [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm"
 
 # neovim
+set -o vi
 export EDITOR="nvim"
+export VISUAL="nvim"
 alias vim="nvim"
 if [[ ! -z ${NVIM_LISTEN_ADDRESS+x} ]]; then
   alias nvim="nvr" # open file if current terminal instance is in neovim
   export EDITOR="nvr"
+  export VISUAL="nvr"
 fi
 
 # std
 alias c="clear"
+alias l="ls -loAG"
 alias ls="ls -G"
-alias la="ls -A"
+alias la="ls -AG"
 alias cls="clear; ls"
 alias cla="clear; ls -A"
 
@@ -56,7 +60,6 @@ alias rebasef='git checkout master && git pull && git checkout - && git rebase m
 alias fp='git fetch origin; git pull origin'
 alias gs='git status'
 alias gb='git branch -v'
-alias gc='git checkout'
 alias gd='git diff'
 
 # fuck
@@ -113,7 +116,7 @@ clone() {
 # regex testing
 regex() {
   if [[ $# -lt 2 ]]; then
-    echo "Usage: $0 PATTERN STRINGS..."
+    echo "Usage: regex PATTERN STRINGS..."
     return
   fi
   regex=$1
@@ -200,22 +203,15 @@ unload() {
 
 # beertime ?
 beertime() {
-  local time=$(date +"%H")
-  local day=$(date +"%u")
-  case $day in
-    [1-4]*) beer_o_clock 18 $time;;
-    5) beer_o_clock 16 $time;;
-    *) beer_o_clock;;
-  esac
+	curl http://beero.cl/ock
 }
 
-beer_o_clock() {
-  if [[ "$1" == "" ]] && [[ "$2" = "" ]]; then
-    echo "You need more beer."
-  elif [[ "$2" -gt "$1" ]]; then
-    echo "Wait... you're not drinking? Grab a beer."
+# git commit
+gc() {
+  if [[ "$2" == "" ]]; then
+    git commit -a -S -m "$1"
   else
-    echo "It's always 5 o'clock somewhere!"
+    git commit $2 -S -m "$1"
   fi
 }
 
@@ -251,6 +247,10 @@ resolve() {
   echo "----------------------------------------------------------------------"
   echo "GET request"
   curl -# --verbose -X GET $1 -o /dev/null
+}
+
+s() {
+  history | grep "$1"
 }
 
 # gpg commit signing

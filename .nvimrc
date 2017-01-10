@@ -1,5 +1,6 @@
 " FileType shortcuts & identifers
 au FileType markdown vnoremap <Space><Bar> :EasyAlign*<Bar><Enter>
+au FileType markdown set spell spelllang=en_us
 au BufNewFile,BufRead *.sgr set filetype=sugarml.pug.jade.html
 au BufNewFile,BufRead *.jade set filetype=sugarml.pug.jade.html
 au BufNewFile,BufRead *.sss set filetype=sugarss.stylus.css
@@ -17,7 +18,7 @@ Plug 'airblade/vim-gitgutter'
 Plug 'editorconfig/editorconfig-vim'
 Plug 'tpope/vim-dispatch'
 Plug 'tpope/vim-surround'
-Plug 'hhsnopek/vim-firewatch'
+Plug 'hhsnopek/vim-firewatch', { 'dir': '~/dev/vim-firewatch' }
 
 " Lazy-load
 Plug 'fatih/vim-go', { 'for': 'go' }
@@ -38,7 +39,6 @@ set nosmarttab
 set tabstop=2
 set shiftwidth=2
 set clipboard=unnamed
-set list
 set listchars=tab:▸-
 set t_Co=256
 set ruler
@@ -82,7 +82,7 @@ let g:netrw_list_hide= '.*\.swp$,.DS_Store,*/tmp/*,*.so,*.swp,*.zip,*.git,^\.\=/
 nnoremap <leader>ev :vsp $MYVIMRC<cr>
 nnoremap <leader>eb :vsp ~/.bashrc<cr>
 nnoremap <leader>sv :source $MYVIMRC<cr>
-nnoremap <leader>sc :source ~/projects/dotfiles/.nvim/bundle/vim-firewatch/colors/firewatch.vim<cr>
+nnoremap <leader>sc :source ~/dev/vim-firewatch/colors/firewatch.vim<cr>
 nnoremap <leader>eh :vsp ~/projects/dotfiles/.hyper.js<cr>
 
 " Tab Controls
@@ -90,12 +90,6 @@ nnoremap tne :tabnew<cr>:Explore<cr>
 
 " for insert mode
 inoremap <S-Tab> <C-d>
-
-" Operation pinkie
-" nnoremap ; :
-" nnoremap : ;
-" vnoremap ; :
-" vnoremap : ;
 
 " Ctrl-Direction to switch panels when in term emulator
 tnoremap ,j <c-\><c-n><c-w>j
