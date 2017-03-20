@@ -21,4 +21,4 @@
 [commit]
   gpgsign = true
 [init]
-	templatedir = ~/.config/git-templates
+  templatedir = ~/.config/git-templates

@@ -1,6 +1,5 @@
 # load prompt & motd
 . ~/.config/bash/prompt.sh
-. ~/.config/bash/motd.sh; motd
 
 # set prompt
 export PS1=$(ps1_prompt)
@@ -19,32 +18,40 @@ export PATH="$PATH:/usr/local/bin"
 export PATH="$PATH:/sbin"
 export PATH="$PATH:/usr/sbin"
 export PATH="$PATH:/usr/local/sbin"
+export PATH="$PATH:$HOME/.cargo/bin"
 
 # go
 export GOPATH="$HOME/go"
 export PATH="$PATH:$GOPATH/bin"
 export PATH="$PATH:/usr/local/go/bin"
-export PATH="$PATH:/Users/henrysnopek/go/bin"
+export PATH="$PATH:$HOME/go/bin"
 
 # rvm/ruby
 export PATH="$PATH:$HOME/.rvm/bin"
-export PATH="$PATH:/Users/henrysnopek/.rvm/bin"
-export PATH="$PATH:/Users/henrysnopek/.rvm/gems/ruby-2.3.0/bin"
-export PATH="$PATH:/Users/henrysnopek/.rvm/gems/ruby-2.3.0@global/bin"
+export PATH="$PATH:$HOME/.rvm/bin"
+export PATH="$PATH:$HOME/.rvm/gems/ruby-2.3.0/bin"
+export PATH="$PATH:$HOME/.rvm/gems/ruby-2.3.0@global/bin"
+export RUBYOPT="$RUBYOPT:$HOME/.rvm/rubies/ruby-2.3.0/lbi/*"
 [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm"
 
 # neovim
+set -o vi
 export EDITOR="nvim"
+export VISUAL="nvim"
 alias vim="nvim"
 if [[ ! -z ${NVIM_LISTEN_ADDRESS+x} ]]; then
   alias nvim="nvr" # open file if current terminal instance is in neovim
   export EDITOR="nvr"
+  export VISUAL="nvr"
+else
+  . ~/.config/bash/motd.sh; motd
 fi
 
 # std
 alias c="clear"
+alias l="ls -loGA"
 alias ls="ls -G"
-alias la="ls -A"
+alias la="ls -GA"
 alias cls="clear; ls"
 alias cla="clear; ls -A"
 
@@ -53,10 +60,8 @@ alias glog="git tree"
 alias branches="git branch -v"
 alias remotes="git remote -v"
 alias rebasef='git checkout master && git pull && git checkout - && git rebase master'
-alias fp='git fetch origin; git pull origin'
 alias gs='git status'
 alias gb='git branch -v'
-alias gc='git checkout'
 alias gd='git diff'
 
 # fuck
@@ -68,22 +73,20 @@ alias drm='docker rm $(docker ps -a -q)'
 alias drmi='docker rmi $(docker images -q)'
 
 # misc
-export PATH="$PATH:/Users/henrysnopek/.luarocks/bin"
+export PATH="$PATH:$HOME/.luarocks/bin"
 export PATH="$PATH:/Applications/Postgres.app/Contents/Versions/latest/bin"
 export FIGNORE="$FIGNORE:DS_Store"
+export FZF_DEFAULT_COMMAND='pt -g ""'
+export FZF_CTRL_T_COMMAND="${FZF_DEFAULT_COMMAND}"
 
 # brew
 export PATH="$PATH:@@HOMEBREW_PREFIX@@/bin"
 export PATH="$(brew --prefix coreutils)/libexec/gnubin:/usr/local/bin:$PATH"
+export MANPATH="$(brew --prefix coreutils)/libexec/gnuman:$MANPATH"
 
 # mmm wifi
 wifi() {
   command m wifi $@
-}
-
-# antiwho? antiwhat? antibody
-antigen() {
-  command antibody "$@"
 }
 
 # git log has never been more beautiful
@@ -102,18 +105,69 @@ clone() {
   fi
 
   if [[ $1 =~ (git\@github.com\:)(.*)\/(.*) ]]; then
-    command git clone $1
+    if [[ "${2}" != "" ]]; then
+      command git clone $1 $2
+    else
+      command git clone $1
+    fi
   elif [[ $1 =~ .+/.+ ]]; then
-    command git clone "git@github.com:$1.git"
+    if [[ "${2}" != "" ]]; then
+      command git clone "git@github.com:$1.git" $2
+    else
+      command git clone "git@github.com:$1.git"
+    fi
   else
     echo "Invalid format: $1"
   fi
 }
 
+# git fetch and pull
+fp() {
+  local branch="${1:-$(git rev-parse --abbrev-ref HEAD 2> /dev/null)}"
+  branch="${branch:-master}"
+  local remote="${2:-origin}"
+
+  git fetch "${remote}"
+  git pull "${remote}" "${branch}"
+}
+
+# git checkout
+co() {
+  local exists=0
+  local branch
+  for branch in git branch --list; do
+    if [[ "${branch/\*\s//}" == "${1}" ]]; then
+      echo "${branch}"
+      exists=1
+      break
+    fi
+  done
+
+  if [[ "${exists}" -eq 0 ]]; then
+    printf 'Branch does not exist. Would you like to create a branch named %s? [Y/n] ' ${1}
+
+    local key
+    read -s -n 1 key
+    if [[ "$key" == '' || "${key}" == 'Y' || "${key}" == 'y' ]]; then
+      printf '\n'
+      git checkout -b "${1}"
+    else
+      printf '\n'
+      return
+    fi
+  else
+    git checkout "${1}"
+  fi
+}
+
+pick() {
+  git cherry-pick "${1}"
+}
+
 # regex testing
 regex() {
   if [[ $# -lt 2 ]]; then
-    echo "Usage: $0 PATTERN STRINGS..."
+    echo "Usage: regex PATTERN STRINGS..."
     return
   fi
   regex=$1
@@ -139,26 +193,26 @@ regex() {
 
 # make your node_modules first class
 spike() {
-  local cmd
-
+  local cmd=
+ 
   # find command path
   if [[ -x ./node_modules/.bin/spike ]]; then
-    cmd="./node_modules/.bin/spike"
+    cmd='./node_modules/.bin/spike'
   else
-    cmd="spike"
+    cmd='spike'
   fi
-
+ 
   # additional operations dependent on param
-  if [[ "$1" == "clean" ]]; then
-    if [[ "$2" == "all" ]] && [[ -d ./_cache ]]; then
+  if [[ "${1}" == 'clean' ]]; then
+    if [[ "${2}" == 'all' || "${2}" == 'cache' ]] && [[ -d ./_cache ]]; then
       rm -r _cache
       echo -e "\033[0;32m✓ cleaned cache\033[m "
     fi
-    $cmd "clean"
+    $cmd 'clean'
   else
     $cmd "$@"
   fi
-
+ 
   return
 }
 
@@ -166,10 +220,10 @@ spike() {
 lint() {
   if [[ $@ == "fix" ]]; then
     command standard --fix | snazzy
-  elif [[ -z "$1" ]]; then
+  elif [[ -z "${1}" ]]; then
     command standard --verbose | snazzy
   else
-    command standard "$1"
+    command standard "${1}"
   fi
 }
 
@@ -200,22 +254,14 @@ unload() {
 
 # beertime ?
 beertime() {
-  local time=$(date +"%H")
-  local day=$(date +"%u")
-  case $day in
-    [1-4]*) beer_o_clock 18 $time;;
-    5) beer_o_clock 16 $time;;
-    *) beer_o_clock;;
-  esac
+  curl http://beero.cl/ock
 }
 
-beer_o_clock() {
-  if [[ "$1" == "" ]] && [[ "$2" = "" ]]; then
-    echo "You need more beer."
-  elif [[ "$2" -gt "$1" ]]; then
-    echo "Wait... you're not drinking? Grab a beer."
+gc() {
+  if [[ "${#@}" == "1" ]]; then
+    git commit -a -S -m "${1}"
   else
-    echo "It's always 5 o'clock somewhere!"
+    git commit -S -m "$@"
   fi
 }
 
@@ -224,7 +270,7 @@ gosp() {
   export OLD_GOPATH=$GOPATH
   export OLD_GOBIN=$GOBIN
 
-  if [[ "$1" == "revert" ]]; then
+  if [[ "${1}" == "revert" ]]; then
     export GOPATH=$OLD_GOPATH
     export GOBIN=$OLD_GOBIN
   else
@@ -236,7 +282,7 @@ gosp() {
 }
 
 resolve() {
-  if [[ "$1" == "" ]]; then
+  if [[ "${1}" == "" ]]; then
     echo "you must pass a domain."
   fi
 
@@ -253,6 +299,86 @@ resolve() {
   curl -# --verbose -X GET $1 -o /dev/null
 }
 
+h() {
+  if [[ "${#@}" -eq 0 ]]; then
+    history
+  else
+    history | grep "${@}" | head -n $(($(history | grep ${@} |  wc -l) - 1))
+  fi
+}
+
+s() {
+  local results=
+  results=$(grep --exclude-dir=node_modules -rnw "${PWD}" -e "${1}")
+  echo -e "${results}"
+  printf "Total Results: $(echo "${results}" | wc -l)\n"
+}
+
+td() {
+  grep \
+    --exclude-dir=node_modules \
+    --text \
+    --color \
+    -nRo ' TODO:.*' .
+}
+
+cd() {
+  builtin cd "$@"
+
+  local current=
+  local version=
+  current="$(node --version)"
+  version="${current}"
+  if [[ -e ".nvmrc" ]]; then
+    version="$(cat .nvmrc)"
+  elif [[ -e 'package.json' ]]; then
+    version="$(cat package.json | jq '.engines.node' | tr -d '\"')"
+    if [[ "${version}" == 'null' ]]; then
+      version="${current}"
+    fi
+  elif [[ -e '.travis.yml' ]]; then
+    local next=
+    next=0
+    for line in $(cat .travis.yml); do
+      if [[ "${next}" -eq 1 ]]; then
+        version=$(echo "${line}" | tr -d "-" | tr -d "'" | sed -e 's/^[[:space:]]*//')
+        break
+      elif [[ "${line}" == 'node_js:' ]]; then
+        next=1
+      fi
+    done
+  fi
+
+  if [[ ${#version} -ge 5 ]]; then
+    version="$(expr substr ${version/>=/} 1 3)"
+  fi
+
+  if [[ "${current}" != "${version}" ]]; then
+    n "${version}"
+  fi
+}
+
+fr() {
+  local excludes=
+  local fType=
+  fType="${2}"
+  if [[ -f '.gitignore' ]]; then
+    for file in $(cat .gitignore); do
+      if [[ -f "${file}" ]]; then
+        excludes+=" ! -wholename '*${file}'"
+      elif [[ -d "${file}" ]]; then
+        excludes+=" ! -wholename './${file/\//}/*'"
+      fi
+    done
+  fi
+  if [[ "${fType}" == "" ]]; then
+    
+    fType="'*'"
+  fi
+
+  echo "find . -type f -name ${fType}${excludes} -exec sed -i '${1}' {} +"
+}
+
 # gpg commit signing
 if test -f ~/.gnupg/.gpg-agent-info -a -n "$(pgrep gpg-agent)"; then
   source ~/.gnupg/.gpg-agent-info
@@ -260,3 +386,5 @@ if test -f ~/.gnupg/.gpg-agent-info -a -n "$(pgrep gpg-agent)"; then
 else
   eval $(gpg-agent --daemon --write-env-file ~/.gnupg/.gpg-agent-info)
 fi
+
+[ -f ~/.fzf.bash ] && source ~/.fzf.bash
