@@ -10,7 +10,7 @@ au BufNewFile,BufRead *.sss set filetype=sugarss.stylus.css
 au BufNewFile,BufRead *.styl set filetype=sugarss.stylus.css
 au BufNewFile,BufRead /etc/nginx/sites-* set filetype=conf
 au BufNewFile,BufRead * :call DetectLang()
-au BufWritePre *.js :!standard --fix %
+au BufWritePost *.js :!standard --fix <afile>
 
 " Plugins
 call plug#begin()
@@ -141,7 +141,7 @@ nnoremap <leader>b :call Battery()<cr>
 nnoremap <leader>n :set hls!<cr>
 nnoremap / :set hlsearch<cr>/
 
-" TODO
+" todo
 nnoremap etd :vsp ~/TODO.md<cr>
 
 " 80th col
