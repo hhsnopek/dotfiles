@@ -13,9 +13,9 @@
 [merge]
   tool = vimdiff
 [mergetool]
-  prompt = true
+  prompt = false
 [mergetool "vimdiff"]
-  cmd = nvim -O -d $BASE $LOCAL $REMOTE $MERGED -c '$wincmd w' -c 'wincmd J'
+  cmd = nvr -l -d $BASE $LOCAL $REMOTE $MERGED -c '$wincmd w' -c 'wincmd J'
 [status]
   submoduleSummary = true
 [commit]
