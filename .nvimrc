@@ -4,13 +4,14 @@ set nocompatible
 au FileType markdown vnoremap <Space><Bar> :EasyAlign*<Bar><Enter>
 au FileType markdown set spell spelllang=en_us
 au FileType markdown set list
+au BufNewFile,BufRead * :call DetectLang()
 au BufNewFile,BufRead *.sgr set filetype=sugarml.pug.jade.html
 au BufNewFile,BufRead *.jade set filetype=sugarml.pug.jade.html
+au BufNewFile,BufRead *.pug set filetype=sugarml.pug.jade.html
 au BufNewFile,BufRead *.sss set filetype=sugarss.stylus.css
 au BufNewFile,BufRead *.styl set filetype=sugarss.stylus.css
 au BufNewFile,BufRead /etc/nginx/sites-* set filetype=conf
-au BufNewFile,BufRead * :call DetectLang()
-au BufWritePost *.js :!standard --fix <afile>
+" autocmd BufWritePost *.js !standard --fix <afile>
 
 " Plugins
 call plug#begin()
@@ -21,10 +22,11 @@ Plug 'tpope/vim-repeat'
 Plug 'editorconfig/editorconfig-vim'
 Plug 'tpope/vim-dispatch'
 Plug 'tpope/vim-surround'
-Plug 'hhsnopek/vim-firewatch'
+Plug '~/.config/nvim/plugged/vim-firewatch'
 Plug 'imain/notmuch-vim'
 Plug 'airblade/vim-gitgutter'
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+Plug 'frankier/neovim-colors-solarized-truecolor-only'
 
 " Lazy-load
 Plug 'fatih/vim-go', { 'for': 'go' }
@@ -46,11 +48,18 @@ set tabstop=2
 set shiftwidth=2
 set clipboard=unnamed
 set listchars=tab:▸-
-set t_Co=256
 set ruler
-syntax on
+syntax enable
+
+" firewatch
 colorscheme firewatch
 hi Search guifg=#ffffff guibg=#D193E2
+
+" solarized
+" let $NVIM_TUI_ENABLE_TRUE_COLOR=1
+" set termguicolors
+" colorscheme solarized
+" set background=light
 
 " Statusline
 set statusline=[%M%n]\ %y\ %t\ %=\ %l:%c
@@ -84,8 +93,8 @@ let g:netrw_list_hide= '.*\.swp$,.DS_Store,*/tmp/*,*.so,*.swp,*.zip,*.git,^\.\=/
 nnoremap <leader>ev :vsp $MYVIMRC<cr>
 nnoremap <leader>eb :vsp ~/.bashrc<cr>
 nnoremap <leader>sv :source $MYVIMRC<cr>
-nnoremap <leader>sc :source ~/projects/dotfiles/.nvim/bundle/vim-firewatch/colors/firewatch.vim<cr>
-nnoremap <leader>eh :vsp ~/projects/dotfiles/.hyper.js<cr>
+nnoremap <leader>sc :source ~/.config/nvim/plugged/vim-firewatch/colors/firewatch.vim<cr>
+nnoremap <leader>ec :vsp ~/.config/nvim/plugged/vim-firewatch/colors/firewatch.vim<cr>
 
 " Tab Controls
 nnoremap tne :tabnew<cr>:Explore<cr>
@@ -98,6 +107,7 @@ inoremap <S-Tab> <C-d>
 " format code
 nnoremap fj :%!python -m json.tool<cr>
 nnoremap fjs :!standard --fix %<cr>
+nnoremap fx :%!xmllint --format %<cr>
 
 " Ctrl-Direction to switch panels when in term emulator
 tnoremap ,j <c-\><c-n><c-w>j
@@ -134,7 +144,6 @@ nnoremap <leader>vt :vsp<cr>:term<cr>
 nnoremap <leader>t :term<cr>
 nnoremap <leader>w :call ToggleWrap()<cr>
 nnoremap <leader>c :set list!<cr>
-" command! Explore :call Explore()<cr>
 nnoremap <leader>b :call Battery()<cr>
 
 " Search adjustments
@@ -142,7 +151,10 @@ nnoremap <leader>n :set hls!<cr>
 nnoremap / :set hlsearch<cr>/
 
 " todo
-nnoremap etd :vsp ~/TODO.md<cr>
+nnoremap etd :vsp ~/TODO<cr>
+
+" project notes
+nnoremap en :vsp $PWD/notes<cr>
 
 " 80th col
 if empty($NVIM_LISTEN_ADDRESS)
