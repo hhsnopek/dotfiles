@@ -2,7 +2,7 @@ set nocompatible
 
 " FileType shortcuts & identifers
 au FileType markdown vnoremap <Space><Bar> :EasyAlign*<Bar><Enter>
-au FileType markdown set spell spelllang=en_us
+" au FileType markdown set spell spelllang=en_us
 au FileType markdown set list
 au BufNewFile,BufRead * :call DetectLang()
 au BufNewFile,BufRead *.sgr set filetype=sugarml.pug.jade.html
@@ -11,7 +11,6 @@ au BufNewFile,BufRead *.pug set filetype=sugarml.pug.jade.html
 au BufNewFile,BufRead *.sss set filetype=sugarss.stylus.css
 au BufNewFile,BufRead *.styl set filetype=sugarss.stylus.css
 au BufNewFile,BufRead /etc/nginx/sites-* set filetype=conf
-" autocmd BufWritePost *.js !standard --fix <afile>
 
 " Plugins
 call plug#begin()
@@ -20,30 +19,29 @@ Plug 'chrisbra/Recover.vim'
 Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-repeat'
 Plug 'editorconfig/editorconfig-vim'
-Plug 'tpope/vim-dispatch'
 Plug 'tpope/vim-surround'
 Plug '~/.config/nvim/plugged/vim-firewatch'
-Plug 'imain/notmuch-vim'
 Plug 'airblade/vim-gitgutter'
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
-Plug 'frankier/neovim-colors-solarized-truecolor-only'
 
 " Lazy-load
+Plug 'koekeishiya/kwm', { 'dir': '~/.config/nvim/plugged/kwm/syntax/vim', 'for': 'kwm' }
 Plug 'fatih/vim-go', { 'for': 'go' }
 Plug 'digitaltoad/vim-pug', { 'for': 'sugarml.pug.jade.html' }
 Plug 'othree/yajs.vim', { 'for': 'javascript' }
-Plug 'kchmck/vim-coffee-script', { 'for': 'coffeescript' }
 Plug 'hhsnopek/vim-sugarss', { 'for': 'sugarss.stylus.css' }
+Plug 'rust-lang/rust.vim', { 'for': 'rust' }
 Plug 'tpope/vim-markdown', { 'for': 'markdown' }
 Plug 'junegunn/vim-easy-align', { 'for': 'markdown' }
 call plug#end()
 
 " Editor settings
-filetype plugin indent on
+filetype plugin on
+filetype indent off
 set number
 set textwidth=80
 set wrap
-set nosmarttab
+set nosmartindent
 set tabstop=2
 set shiftwidth=2
 set clipboard=unnamed
@@ -52,14 +50,9 @@ set ruler
 syntax enable
 
 " firewatch
+set termguicolors
+set background=dark
 colorscheme firewatch
-hi Search guifg=#ffffff guibg=#D193E2
-
-" solarized
-" let $NVIM_TUI_ENABLE_TRUE_COLOR=1
-" set termguicolors
-" colorscheme solarized
-" set background=light
 
 " Statusline
 set statusline=[%M%n]\ %y\ %t\ %=\ %l:%c
@@ -107,6 +100,7 @@ inoremap <S-Tab> <C-d>
 " format code
 nnoremap fj :%!python -m json.tool<cr>
 nnoremap fjs :!standard --fix %<cr>
+nnoremap fjsp :%!prettier --stdin --no-semi --single-quote<cr>
 nnoremap fx :%!xmllint --format %<cr>
 
 " Ctrl-Direction to switch panels when in term emulator
@@ -158,7 +152,7 @@ nnoremap en :vsp $PWD/notes<cr>
 
 " 80th col
 if empty($NVIM_LISTEN_ADDRESS)
-  highlight OverLength ctermbg=174 ctermfg=255
+  highlight link OverLength Error
   match OverLength /\%81v.\+/
 endif
 
@@ -180,7 +174,7 @@ function! ToggleWrap()
   endif
 endfunc
 
-" Format Markdown files.
+" Format Markdown files
 function! MarkdownFormat()
   let save_pos = getpos(".")
   let query = getreg('/')
@@ -188,11 +182,6 @@ function! MarkdownFormat()
   call setpos(".", save_pos)
   call setreg('/', query)
 endfunction
-
-" function! Explore(...)
-"   let dir = (a:0 == 1) ? a:1 : $PWD
-"   execute ":Explore" dir
-" endfunction
 
 " Detect Shebang language
 function! DetectLang()
@@ -210,7 +199,40 @@ function! DetectLang()
   endif
 endfun
 
+" Battery Status
+" DISCHARING: 47% TTL: 3:20
 function! Battery()
   let life = system("pmset -g batt | tail -n -1 | sed -n 's/.*\\([0-9]\\{2,2\\}" . fnameescape('%') . "\\);\\s\\(.*\\);\\s\\([0-9]\\{0,1\\}[0-9]:[0-9][0-9]\\).*/\\U\\" . fnameescape('2') . ": \\" . fnameescape('1') . "  TTL: \\" . fnameescape('3') . "/p'")
   echo strpart(life, 0, strlen(life) - 1)
 endfun
+
+" Tabline
+function! Tabline()
+  let s = ''
+  for tabnum in range(tabpagenr('$'))
+    let tabnr = tabnum + 1
+    let winnr = tabpagewinnr(tabnr)
+		let tabcwd = getcwd(winnr, tabnr)
+    let tabname = (tabcwd != '' ? fnamemodify(tabcwd, ':t') . ' ' : '[No Name] ')
+
+    " check if it's a term instance (neovim only)
+    let buflist = tabpagebuflist(tabnr)
+    let bufnr = buflist[winnr - 1]
+    let bufname = bufname(bufnr)
+    if len(buflist) == 1
+      if bufname =~ 'term://'
+        let tabname = 'term '
+      endif
+    endif
+
+		" format
+    let s .= (tabnr == tabpagenr() ? ' %#Title#' : '%#TabLine#')
+    let s .= ' ' . tabnr .' '
+    let s .= (tabnr == tabpagenr() ? '%#TabLineSel#' : '%#TabLine#')
+    let s .= tabname
+  endfor
+
+  let s .= '%#TabLineFill#'
+  return s
+endfunction
+set tabline=%!Tabline()
