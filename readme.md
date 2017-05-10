@@ -10,6 +10,7 @@
 - [vim-plug]
 - [npm]
 - [kwm]
+- [alacritty]
 
 ### Installation
 ```bash
@@ -21,3 +22,4 @@ curl -fsSL https://raw.githubusercontent.com/hhsnopek/dotfiles/master/install.sh
 [vim-plug]: https://github.com/junegunn/vim-plug
 [npm]: https://npmjs.org
 [kwm]: https://github.com/koekeishiya/kwm
+[alacritty]: https://github.com/jwilm/alacritty
