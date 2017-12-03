@@ -2,7 +2,7 @@ set nocompatible
 
 " FileType shortcuts & identifers
 au FileType markdown vnoremap <Space><Bar> :EasyAlign*<Bar><Enter>
-" au FileType markdown set spell spelllang=en_us
+au FileType markdown set spell spelllang=en_us
 au FileType markdown set list
 au BufNewFile,BufRead * :call DetectLang()
 au BufNewFile,BufRead *.sgr set filetype=sugarml.pug.jade.html
@@ -11,6 +11,7 @@ au BufNewFile,BufRead *.pug set filetype=sugarml.pug.jade.html
 au BufNewFile,BufRead *.sss set filetype=sugarss.stylus.css
 au BufNewFile,BufRead *.styl set filetype=sugarss.stylus.css
 au BufNewFile,BufRead /etc/nginx/sites-* set filetype=conf
+au TermOpen * setlocal nonumber
 
 " Plugins
 call plug#begin()
@@ -23,8 +24,10 @@ Plug 'tpope/vim-surround'
 Plug '~/.config/nvim/plugged/vim-firewatch'
 Plug 'airblade/vim-gitgutter'
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+Plug 'w0rp/ale'
 
 " Lazy-load
+Plug 'kchmck/vim-coffee-script', { 'for': 'coffee' }
 Plug 'koekeishiya/kwm', { 'dir': '~/.config/nvim/plugged/kwm/syntax/vim', 'for': 'kwm' }
 Plug 'fatih/vim-go', { 'for': 'go' }
 Plug 'digitaltoad/vim-pug', { 'for': 'sugarml.pug.jade.html' }
@@ -44,8 +47,9 @@ set wrap
 set nosmartindent
 set tabstop=2
 set shiftwidth=2
+set expandtab
 set clipboard=unnamed
-set listchars=tab:▸-
+set listchars=tab:\\t,extends:›,precedes:‹,nbsp:•,trail:•
 set ruler
 syntax enable
 
@@ -56,6 +60,9 @@ colorscheme firewatch
 
 " Statusline
 set statusline=[%M%n]\ %y\ %t\ %=\ %l:%c
+
+" ale
+let g:ale_fix_on_save = 1
 
 " Neovim/Python
 let g:python_host_prog='/usr/local/bin/python2'
@@ -82,12 +89,27 @@ let g:EditorConfig_core_mode = 'external_command'
 let g:netrw_banner = 0
 let g:netrw_list_hide= '.*\.swp$,.DS_Store,*/tmp/*,*.so,*.swp,*.zip,*.git,^\.\=/\=$'
 
+" vim-go
+set autowrite
+set updatetime=200
+let g:go_auto_type_info = 1
+let g:go_fmt_command = "goimports"
+autocmd FileType go nmap <leader>r  <Plug>(go-run)
+autocmd FileType go nmap <leader>b :<C-u>call <SID>build_go_files()<CR>
+autocmd FileType go nmap <leader>i <Plug>(go-info)
+map <C-n> :cnext<CR>
+map <C-m> :cprevious<CR>
+nnoremap <leader>a :cclose<CR>
+
 " Edit and source vimrc on the fly
 nnoremap <leader>ev :vsp $MYVIMRC<cr>
-nnoremap <leader>eb :vsp ~/.bashrc<cr>
 nnoremap <leader>sv :source $MYVIMRC<cr>
-nnoremap <leader>sc :source ~/.config/nvim/plugged/vim-firewatch/colors/firewatch.vim<cr>
+
+nnoremap <leader>eb :vsp ~/.bashrc<cr>
+nnoremap <leader>ea :vsp ~/.config/alacritty/alacritty.yml
+
 nnoremap <leader>ec :vsp ~/.config/nvim/plugged/vim-firewatch/colors/firewatch.vim<cr>
+nnoremap <leader>sc :source ~/.config/nvim/plugged/vim-firewatch/colors/firewatch.vim<cr>
 
 " Tab Controls
 nnoremap tne :tabnew<cr>:Explore<cr>
@@ -104,8 +126,7 @@ nnoremap fjsp :%!prettier --stdin --no-semi --single-quote<cr>
 nnoremap fx :%!xmllint --format %<cr>
 
 " Ctrl-Direction to switch panels when in term emulator
-tnoremap ,j <c-\><c-n><c-w>j
-tnoremap ,k <c-\><c-n><c-w>k
+tnoremap ,j <c-\><c-n><c-w>j tnoremap ,k <c-\><c-n><c-w>k
 tnoremap ,l <c-\><c-n><c-w>l
 tnoremap ,h <c-\><c-n><c-w>h
 tnoremap <esc> <c-\><c-n>
@@ -135,10 +156,8 @@ nnoremap <leader>V :vsp<cr>
 nnoremap <leader>S :sp<cr>
 nnoremap <leader>st :sp<cr>:term<cr>
 nnoremap <leader>vt :vsp<cr>:term<cr>
-nnoremap <leader>t :term<cr>
 nnoremap <leader>w :call ToggleWrap()<cr>
 nnoremap <leader>c :set list!<cr>
-nnoremap <leader>b :call Battery()<cr>
 
 " Search adjustments
 nnoremap <leader>n :set hls!<cr>
@@ -199,20 +218,13 @@ function! DetectLang()
   endif
 endfun
 
-" Battery Status
-" DISCHARING: 47% TTL: 3:20
-function! Battery()
-  let life = system("pmset -g batt | tail -n -1 | sed -n 's/.*\\([0-9]\\{2,2\\}" . fnameescape('%') . "\\);\\s\\(.*\\);\\s\\([0-9]\\{0,1\\}[0-9]:[0-9][0-9]\\).*/\\U\\" . fnameescape('2') . ": \\" . fnameescape('1') . "  TTL: \\" . fnameescape('3') . "/p'")
-  echo strpart(life, 0, strlen(life) - 1)
-endfun
-
 " Tabline
 function! Tabline()
   let s = ''
   for tabnum in range(tabpagenr('$'))
     let tabnr = tabnum + 1
     let winnr = tabpagewinnr(tabnr)
-		let tabcwd = getcwd(winnr, tabnr)
+    let tabcwd = getcwd(winnr, tabnr)
     let tabname = (tabcwd != '' ? fnamemodify(tabcwd, ':t') . ' ' : '[No Name] ')
 
     " check if it's a term instance (neovim only)
@@ -225,7 +237,7 @@ function! Tabline()
       endif
     endif
 
-		" format
+    " format
     let s .= (tabnr == tabpagenr() ? ' %#Title#' : '%#TabLine#')
     let s .= ' ' . tabnr .' '
     let s .= (tabnr == tabpagenr() ? '%#TabLineSel#' : '%#TabLine#')
@@ -236,3 +248,13 @@ function! Tabline()
   return s
 endfunction
 set tabline=%!Tabline()
+
+" run :GoBuild or :GoTestCompile based on the go file
+function! s:build_go_files()
+  let l:file = expand('%')
+  if l:file =~# '^\f\+_test\.go$'
+    call go#test#Test(0, 1)
+  elseif l:file =~# '^\f\+\.go$'
+    call go#cmd#Build(0)
+  endif
+endfunction

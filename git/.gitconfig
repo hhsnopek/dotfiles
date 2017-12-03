@@ -11,14 +11,14 @@
   smudge = git-lfs smudge -- %f
   required = true
 [merge]
-  tool = vimdiff
-[mergetool]
-  prompt = false
-[mergetool "vimdiff"]
-  cmd = nvr -l -d $BASE $LOCAL $REMOTE $MERGED -c '$wincmd w' -c 'wincmd J'
+    tool = nvr
+[mergetool "nvr"]
+    cmd = "nvr -cc tabnew -o \"$BASE\" \"$REMOTE\" -O \"$LOCAL\" \"$MERGED\""
 [status]
   submoduleSummary = true
 [commit]
   gpgsign = true
 [init]
   templatedir = ~/.config/git-templates
+[gpg]
+  program = gpg

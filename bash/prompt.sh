@@ -18,10 +18,10 @@
 #  unmerged   |   cyan
 
 ps1_prompt() {
-  local dir="\[\033[0;38;05;167m\]\W"
-  local git="\[\033[0;38;05;250m\]\$(ps1_branch)"
+  local dir='\[\033[0;38;05;167m\]\W'
+  local git="\[\033[0;38;05;250m\]\$(ps1_branch)\]"
   local sep=" \[\033[1;38;05;\]\[\$(ps1_statusColor "0")\].\[\033[1;38;05;\]\[\$(ps1_statusColor "1")\]."
-  local reset="\[\033[1;0m\] "
+  local reset='\[\033[1;0m\]\[ \]'
   echo "$dir$git$sep$reset"
 }
 

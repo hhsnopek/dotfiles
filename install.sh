@@ -1,5 +1,5 @@
 # clone repo
-git clone --recursive https://github.com/hhsnopek/dotfiles.git
+# git clone --recursive https://github.com/hhsnopek/dotfiles.git
 
 # setup
 mkdir -p ${HOME}/.config

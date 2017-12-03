@@ -1,3 +1,4 @@
+[[ $- == *i* ]] || return
 # load prompt & motd
 . ~/.config/bash/prompt.sh
 
@@ -20,6 +21,10 @@ export PATH="$PATH:/usr/sbin"
 export PATH="$PATH:/usr/local/sbin"
 export PATH="$PATH:$HOME/.cargo/bin"
 
+# node
+export N_PREFIX="$HOME/n";
+[[ :$PATH: == *":$N_PREFIX/bin:"* ]] || PATH+=":$N_PREFIX/bin"
+
 # go
 export GOPATH="$HOME/go"
 export PATH="$PATH:$GOPATH/bin"
@@ -28,11 +33,9 @@ export PATH="$PATH:$HOME/go/bin"
 
 # rvm/ruby
 export PATH="$PATH:$HOME/.rvm/bin"
-export PATH="$PATH:$HOME/.rvm/bin"
 export PATH="$PATH:$HOME/.rvm/gems/ruby-2.3.0/bin"
 export PATH="$PATH:$HOME/.rvm/gems/ruby-2.3.0@global/bin"
 export RUBYOPT="$RUBYOPT:$HOME/.rvm/rubies/ruby-2.3.0/lbi/*"
-[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm"
 
 # neovim
 set -o vi
@@ -41,15 +44,13 @@ export VISUAL="nvim"
 alias vim="nvim"
 if [[ ! -z ${NVIM_LISTEN_ADDRESS+x} ]]; then
   alias nvim="nvr" # open file if current terminal instance is in neovim
-  export EDITOR="nvr"
-  export VISUAL="nvr"
 else
   . ~/.config/bash/motd.sh; motd
 fi
 
 # std
 alias c="clear"
-alias l="ls -loGA"
+alias l="ls -loGAh"
 alias ls="ls -G"
 alias la="ls -GA"
 alias cls="clear; ls"
@@ -76,13 +77,26 @@ alias drmi='docker rmi $(docker images -q)'
 export PATH="$PATH:$HOME/.luarocks/bin"
 export PATH="$PATH:/Applications/Postgres.app/Contents/Versions/latest/bin"
 export FIGNORE="$FIGNORE:DS_Store"
+
+# fzf
 export FZF_DEFAULT_COMMAND='pt -g ""'
 export FZF_CTRL_T_COMMAND="${FZF_DEFAULT_COMMAND}"
+[ -f ~/.fzf.bash ] && source ~/.fzf.bash
 
 # brew
+alias brewski='brew update && brew upgrade && brew cleanup; brew doctor'
 export PATH="$PATH:@@HOMEBREW_PREFIX@@/bin"
 export PATH="$(brew --prefix coreutils)/libexec/gnubin:/usr/local/bin:$PATH"
 export MANPATH="$(brew --prefix coreutils)/libexec/gnuman:$MANPATH"
+
+# electron versioning
+# export npm_config_target=1.6.11
+# export npm_config_arch=x64
+# export npm_config_target_arch=x64
+# export npm_config_disturl=https://atom.io/download/electron
+# export npm_config_runtime=electron
+# export npm_config_build_from_source=true
+# HOME=~/.electron-gyp npm install
 
 # mmm wifi
 wifi() {
@@ -135,9 +149,8 @@ fp() {
 co() {
   local exists=0
   local branch
-  for branch in git branch --list; do
-    if [[ "${branch/\*\s//}" == "${1}" ]]; then
-      echo "${branch}"
+	for branch in $(git branch --list); do
+    if [[ "${branch/[\*\s/|\s\s]/}" == "${1}" ]]; then
       exists=1
       break
     fi
@@ -158,6 +171,10 @@ co() {
   else
     git checkout "${1}"
   fi
+}
+
+gr() {
+	git rebase -i "HEAD~${1}"
 }
 
 pick() {
@@ -233,7 +250,7 @@ load() {
     if [[ -f ~/Library/LaunchAgents/com.koekeishiya.kwm.plist ]]; then
       command launchctl load ~/Library/LaunchAgents/com.koekeishiya.kwm.plist
     else
-      command brew services start kwm
+      command brew services start koekeishiya/formulae/kwm
     fi
   else
     command launchctl load "$@"
@@ -245,7 +262,7 @@ unload() {
     if [[ -f ~/Library/LaunchAgents/com.koekeishiya.kwm.plist ]]; then
       command launchctl unload ~/Library/LaunchAgents/com.koekeishiya.kwm.plist
     else
-      command brew services stop kwm
+      command brew services stop koekeishiya/formulae/kwm
     fi
   else
     command launchctl unload "$@"
@@ -314,49 +331,51 @@ s() {
   printf "Total Results: $(echo "${results}" | wc -l)\n"
 }
 
-td() {
+todo() {
   grep \
     --exclude-dir=node_modules \
+    --exclude-dir=build \
+    --exclude-dir=public \
+    --exclude-dir=.git \
     --text \
-    --color \
-    -nRo ' TODO:.*' .
+    -nRo ' TODO.*' .
 }
 
-cd() {
-  builtin cd "$@"
+# cd() {
+#   builtin cd "$@"
 
-  local current=
-  local version=
-  current="$(node --version)"
-  version="${current}"
-  if [[ -e ".nvmrc" ]]; then
-    version="$(cat .nvmrc)"
-  elif [[ -e 'package.json' ]]; then
-    version="$(cat package.json | jq '.engines.node' | tr -d '\"')"
-    if [[ "${version}" == 'null' ]]; then
-      version="${current}"
-    fi
-  elif [[ -e '.travis.yml' ]]; then
-    local next=
-    next=0
-    for line in $(cat .travis.yml); do
-      if [[ "${next}" -eq 1 ]]; then
-        version=$(echo "${line}" | tr -d "-" | tr -d "'" | sed -e 's/^[[:space:]]*//')
-        break
-      elif [[ "${line}" == 'node_js:' ]]; then
-        next=1
-      fi
-    done
-  fi
+#   local current=
+#   local version=
+#   current="$(node --version)"
+#   version="${current}"
+#   if [[ -e ".nvmrc" ]]; then
+#     version="$(cat .nvmrc)"
+#   elif [[ -e 'package.json' ]]; then
+#     version="$(cat package.json | jq '.engines.node' | tr -d '\"')"
+#     if [[ "${version}" == 'null' ]]; then
+#       version="${current}"
+#     fi
+#   elif [[ -e '.travis.yml' ]]; then
+#     local next=
+#     next=0
+#     for line in $(cat .travis.yml); do
+#       if [[ "${next}" -eq 1 ]]; then
+#         version=$(echo "${line}" | tr -d "-" | tr -d "'" | sed -e 's/^[[:space:]]*//')
+#         break
+#       elif [[ "${line}" == 'node_js:' ]]; then
+#         next=1
+#       fi
+#     done
+#   fi
 
-  if [[ ${#version} -ge 5 ]]; then
-    version="$(expr substr ${version/>=/} 1 3)"
-  fi
+#   if [[ ${#version} -ge 5 ]]; then
+#     version="$(expr substr ${version/>=/} 1 3)"
+#   fi
 
-  if [[ "${current}" != "${version}" ]]; then
-    n "${version}"
-  fi
-}
+#   if [[ "${current}" != "${version}" ]]; then
+#     n "${version}"
+#   fi
+# }
 
 fr() {
   local excludes=
@@ -380,11 +399,19 @@ fr() {
 }
 
 # gpg commit signing
-if test -f ~/.gnupg/.gpg-agent-info -a -n "$(pgrep gpg-agent)"; then
-  source ~/.gnupg/.gpg-agent-info
-  export GPG_AGENT_INFO
-else
-  eval $(gpg-agent --daemon --write-env-file ~/.gnupg/.gpg-agent-info)
+if [ "$PS1" ]; then
+    unset GPG_AGENT_INFO
+    unset SSH_AGENT_PID
+    if [ "${gnupg_SSH_AUTH_SOCK_by:-0}" -ne $$ ]; then
+      export SSH_AUTH_SOCK="${HOME}/.gnupg/S.gpg-agent.ssh"
+    fi
 fi
+export GPG_TTY=`tty`
 
-[ -f ~/.fzf.bash ] && source ~/.fzf.bash
+# bash completion
+for file in /usr/local/etc/bash_completion.d/*; do
+	source $file
+done
+
+# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
+export PATH="$PATH:$HOME/.rvm/bin"
