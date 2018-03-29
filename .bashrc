@@ -6,7 +6,7 @@
 # set prompt
 export PS1=$(ps1_prompt)
 
-# shell
+# shell - https://www.gnu.org/software/bash
 if hash /usr/local/bin/bash 2>/dev/null; then
   export SHELL="/usr/local/bin/bash"
 else
@@ -22,30 +22,31 @@ export PATH="$PATH:/usr/sbin"
 export PATH="$PATH:/usr/local/sbin"
 export PATH="$PATH:$HOME/.cargo/bin"
 
-# node
+# node - https://nodejs.org
 export N_PREFIX="$HOME/n";
 [[ :$PATH: == *":$N_PREFIX/bin:"* ]] || PATH+=":$N_PREFIX/bin"
 
-# go
+# go - https://golang.org/
 export GOPATH="$HOME/go"
 export PATH="$PATH:$GOPATH/bin"
 export PATH="$PATH:/usr/local/go/bin"
 export PATH="$PATH:$HOME/go/bin"
 
-# rvm/ruby
+# rvm - https://rvm.io & ruby - https://www.ruby-lang.org
 export PATH="$PATH:$HOME/.rvm/bin"
 export PATH="$PATH:$HOME/.rvm/gems/ruby-2.3.0/bin"
 export PATH="$PATH:$HOME/.rvm/gems/ruby-2.3.0@global/bin"
 export RUBYOPT="$RUBYOPT:$HOME/.rvm/rubies/ruby-2.3.0/lbi/*"
 
-# neovim
+# neovim - https://neovim.io
 set -o vi
 alias vim="nvim"
 if [[ -z ${NVIM_LISTEN_ADDRESS+x} ]]; then
   . ~/.config/bash/motd.sh; motd
   export VISUAL="nvim"
 else
-  # Don't nest neovim terminals
+  # Don't nest neovim terminals 
+  # neovim-remote - https://github.com/mhinz/neovim-remote
   export VISUAL='nvr -cc split --remote-wait'
 fi
 export EDITOR="$VISUAL"
@@ -66,12 +67,13 @@ alias rebasef='git checkout master && git pull && git checkout - && git rebase m
 alias gs='git status'
 alias gb='git branch -v'
 alias gd='git diff'
+alias gds='git diff --staged'
 
-# fuck
-alias fuck='eval $(thefuck $(fc -ln -1 | tail -n 1)); fc -R'
+# fuck - https://github.com/nvbn/thefuck
+eval $(thefuck --alias --enable-experimental-instant-mode)
 alias FUCK='fuck'
 
-# docker
+# docker - https://www.docker.com
 alias drm='docker rm $(docker ps -a -q)'
 alias drmi='docker rmi $(docker images -q)'
 
@@ -80,12 +82,12 @@ export PATH="$PATH:$HOME/.luarocks/bin"
 export PATH="$PATH:/Applications/Postgres.app/Contents/Versions/latest/bin"
 export FIGNORE="$FIGNORE:DS_Store"
 
-# fzf
+# fzf - https://github.com/junegunn/fzf
 export FZF_DEFAULT_COMMAND='pt -g ""'
 export FZF_CTRL_T_COMMAND="${FZF_DEFAULT_COMMAND}"
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
 
-# brew
+# brew - https://brew.sh/
 alias brewski='brew update && brew upgrade && brew cleanup; brew doctor'
 export PATH="$PATH:@@HOMEBREW_PREFIX@@/bin"
 export PATH="$(brew --prefix coreutils)/libexec/gnubin:/usr/local/bin:$PATH"
@@ -100,7 +102,7 @@ export MANPATH="$(brew --prefix coreutils)/libexec/gnuman:$MANPATH"
 # export npm_config_build_from_source=true
 # HOME=~/.electron-gyp npm install
 
-# mmm wifi
+# mmm wifi - https://github.com/rgcr/m-cli
 wifi() {
   command m wifi $@
 }
@@ -329,6 +331,3 @@ fi
 for file in /usr/local/etc/bash_completion.d/*; do
 	source $file
 done
-
-# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
-export PATH="$PATH:$HOME/.rvm/bin"
