@@ -10,10 +10,14 @@
   clean = git-lfs clean -- %f
   smudge = git-lfs smudge -- %f
   required = true
+[diff]
+    tool = nvr
+[difftool "nvr"]
+    cmd = nvr -s -d $LOCAL $REMOTE
 [merge]
     tool = nvr
 [mergetool "nvr"]
-    cmd = "nvr -cc tabnew -o \"$BASE\" \"$REMOTE\" -O \"$LOCAL\" \"$MERGED\""
+    cmd = nvr -s -d $LOCAL $BASE $REMOTE $MERGED -c 'wincmd J | wincmd ='
 [status]
   submoduleSummary = true
 [commit]
@@ -22,3 +26,5 @@
   templatedir = ~/.config/git-templates
 [gpg]
   program = gpg
+[alias]
+  tree = log --graph --pretty=format:'%Cred%h%Creset %an: %s - %Creset %C(yellow)%d%Creset %Cgreen(%cr)%Creset' --abbrev-commit --date=relative

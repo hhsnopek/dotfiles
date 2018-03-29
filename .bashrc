@@ -1,5 +1,6 @@
 [[ $- == *i* ]] || return
-# load prompt & motd
+
+# load prompt
 . ~/.config/bash/prompt.sh
 
 # set prompt
@@ -39,14 +40,15 @@ export RUBYOPT="$RUBYOPT:$HOME/.rvm/rubies/ruby-2.3.0/lbi/*"
 
 # neovim
 set -o vi
-export EDITOR="nvim"
-export VISUAL="nvim"
 alias vim="nvim"
-if [[ ! -z ${NVIM_LISTEN_ADDRESS+x} ]]; then
-  alias nvim="nvr" # open file if current terminal instance is in neovim
-else
+if [[ -z ${NVIM_LISTEN_ADDRESS+x} ]]; then
   . ~/.config/bash/motd.sh; motd
+  export VISUAL="nvim"
+else
+  # Don't nest neovim terminals
+  export VISUAL='nvr -cc split --remote-wait'
 fi
+export EDITOR="$VISUAL"
 
 # std
 alias c="clear"
@@ -101,15 +103,6 @@ export MANPATH="$(brew --prefix coreutils)/libexec/gnuman:$MANPATH"
 # mmm wifi
 wifi() {
   command m wifi $@
-}
-
-# git log has never been more beautiful
-git() {
-  if [[ $1 == "tree" ]]; then
-    command  git log --graph --pretty=format:'%Cred%h%Creset %an: %s - %Creset %C(yellow)%d%Creset %Cgreen(%cr)%Creset' --abbrev-commit --date=relative
-  else
-    command git "$@"
-  fi
 }
 
 # git clone
@@ -173,14 +166,6 @@ co() {
   fi
 }
 
-gr() {
-	git rebase -i "HEAD~${1}"
-}
-
-pick() {
-  git cherry-pick "${1}"
-}
-
 # regex testing
 regex() {
   if [[ $# -lt 2 ]]; then
@@ -206,31 +191,6 @@ regex() {
     fi
     shift
   done
-}
-
-# make your node_modules first class
-spike() {
-  local cmd=
- 
-  # find command path
-  if [[ -x ./node_modules/.bin/spike ]]; then
-    cmd='./node_modules/.bin/spike'
-  else
-    cmd='spike'
-  fi
- 
-  # additional operations dependent on param
-  if [[ "${1}" == 'clean' ]]; then
-    if [[ "${2}" == 'all' || "${2}" == 'cache' ]] && [[ -d ./_cache ]]; then
-      rm -r _cache
-      echo -e "\033[0;32m✓ cleaned cache\033[m "
-    fi
-    $cmd 'clean'
-  else
-    $cmd "$@"
-  fi
- 
-  return
 }
 
 # quick linting with standard/snazzy
@@ -272,14 +232,6 @@ unload() {
 # beertime ?
 beertime() {
   curl http://beero.cl/ock
-}
-
-gc() {
-  if [[ "${#@}" == "1" ]]; then
-    git commit -a -S -m "${1}"
-  else
-    git commit -S -m "$@"
-  fi
 }
 
 # Go set path
@@ -341,42 +293,6 @@ todo() {
     -nRo ' TODO.*' .
 }
 
-# cd() {
-#   builtin cd "$@"
-
-#   local current=
-#   local version=
-#   current="$(node --version)"
-#   version="${current}"
-#   if [[ -e ".nvmrc" ]]; then
-#     version="$(cat .nvmrc)"
-#   elif [[ -e 'package.json' ]]; then
-#     version="$(cat package.json | jq '.engines.node' | tr -d '\"')"
-#     if [[ "${version}" == 'null' ]]; then
-#       version="${current}"
-#     fi
-#   elif [[ -e '.travis.yml' ]]; then
-#     local next=
-#     next=0
-#     for line in $(cat .travis.yml); do
-#       if [[ "${next}" -eq 1 ]]; then
-#         version=$(echo "${line}" | tr -d "-" | tr -d "'" | sed -e 's/^[[:space:]]*//')
-#         break
-#       elif [[ "${line}" == 'node_js:' ]]; then
-#         next=1
-#       fi
-#     done
-#   fi
-
-#   if [[ ${#version} -ge 5 ]]; then
-#     version="$(expr substr ${version/>=/} 1 3)"
-#   fi
-
-#   if [[ "${current}" != "${version}" ]]; then
-#     n "${version}"
-#   fi
-# }
-
 fr() {
   local excludes=
   local fType=
@@ -396,9 +312,11 @@ fr() {
   fi
 
   echo "find . -type f -name ${fType}${excludes} -exec sed -i '${1}' {} +"
+  find . -type f -name ${fType}${excludes} -exec sed -i '${1}' {} +
 }
 
 # gpg commit signing
+export GPG_TTY=`tty`
 if [ "$PS1" ]; then
     unset GPG_AGENT_INFO
     unset SSH_AGENT_PID
@@ -406,7 +324,6 @@ if [ "$PS1" ]; then
       export SSH_AUTH_SOCK="${HOME}/.gnupg/S.gpg-agent.ssh"
     fi
 fi
-export GPG_TTY=`tty`
 
 # bash completion
 for file in /usr/local/etc/bash_completion.d/*; do

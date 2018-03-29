@@ -1,5 +1,10 @@
 set nocompatible
 
+" Don't nest neovim terminals
+if has('nvim')
+  let $VISUAL = 'nvr -cc split --remote-wait-silent'
+endif
+
 " FileType shortcuts & identifers
 au FileType markdown vnoremap <Space><Bar> :EasyAlign*<Bar><Enter>
 au FileType markdown set spell spelllang=en_us
@@ -112,18 +117,19 @@ nnoremap <leader>ec :vsp ~/.config/nvim/plugged/vim-firewatch/colors/firewatch.v
 nnoremap <leader>sc :source ~/.config/nvim/plugged/vim-firewatch/colors/firewatch.vim<cr>
 
 " Tab Controls
-nnoremap tne :tabnew<cr>:Explore<cr>
 nnoremap <Tab>l :tabn<cr>
 nnoremap <Tab>h :tabp<cr>
 
 " for insert mode
 inoremap <S-Tab> <C-d>
 
-" format code
+" Format code
 nnoremap fj :%!python -m json.tool<cr>
 nnoremap fjs :!standard --fix %<cr>
 nnoremap fjsp :%!prettier --stdin --no-semi --single-quote<cr>
+nnoremap fjse :%!eslint --stdin<cr>
 nnoremap fx :%!xmllint --format %<cr>
+nnoremap rt :%s/\t/  /g<cr>
 
 " Ctrl-Direction to switch panels when in term emulator
 tnoremap ,j <c-\><c-n><c-w>j tnoremap ,k <c-\><c-n><c-w>k
@@ -163,17 +169,20 @@ nnoremap <leader>c :set list!<cr>
 nnoremap <leader>n :set hls!<cr>
 nnoremap / :set hlsearch<cr>/
 
-" todo
+" Todo
 nnoremap etd :vsp ~/TODO<cr>
 
-" project notes
+" Notes
 nnoremap en :vsp $PWD/notes<cr>
 
-" 80th col
-if empty($NVIM_LISTEN_ADDRESS)
-  highlight link OverLength Error
-  match OverLength /\%81v.\+/
-endif
+" Save and Delete Buffer
+nnoremap Q :w\|bd<cr>
+
+" TODO 80th col
+" if has('nvim')
+"   highlight link OverLength Error
+"   match OverLength /\%81v.\+/
+" endif
 
 " Syntax Identifier
 nmap <leader>sf :call <SID>SynStack()<CR>
@@ -257,4 +266,18 @@ function! s:build_go_files()
   elseif l:file =~# '^\f\+\.go$'
     call go#cmd#Build(0)
   endif
+endfunction
+
+function! SwapWords(dict, ...)
+    let words = keys(a:dict) + values(a:dict)
+    let words = map(words, 'escape(v:val, "|")')
+    if(a:0 == 1)
+        let delimiter = a:1
+    else
+        let delimiter = '/'
+    endif
+    let pattern = '\v(' . join(words, '|') . ')'
+    exe '%s' . delimiter . pattern . delimiter
+        \ . '\=' . string(Mirror(a:dict)) . '[S(0)]'
+        \ . delimiter . 'g'
 endfunction
