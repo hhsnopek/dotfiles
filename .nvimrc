@@ -1,6 +1,6 @@
 set nocompatible
 
-" Don't nest neovim terminals
+" Prevent Neovim Terminal Nesting
 if has('nvim')
   let $VISUAL = 'nvr -cc split --remote-wait-silent'
 endif
@@ -20,23 +20,27 @@ au TermOpen * setlocal nonumber
 
 " Plugins
 call plug#begin()
+
 " Global
 Plug 'chrisbra/Recover.vim'
 Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-repeat'
-Plug 'editorconfig/editorconfig-vim'
 Plug 'tpope/vim-surround'
-Plug '~/.config/nvim/plugged/vim-firewatch'
+Plug 'editorconfig/editorconfig-vim'
 Plug 'airblade/vim-gitgutter'
-Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+Plug 'junegunn/fzf', { 'dir': '/home/hhsnopek/.fzf', 'do': './install --all' }
 Plug 'w0rp/ale'
+Plug 'mxw/vim-jsx'
+Plug 'rbong/vim-flog'
+Plug 'challenger-deep-theme/vim', { 'as': 'challenger-deep' }
+Plug 'tpope/vim-fugitive'
 
 " Lazy-load
+Plug 'othree/yajs.vim', { 'for': 'javascript' }
+Plug 'othree/es.next.syntax.vim', { 'for': 'javascript' }
 Plug 'kchmck/vim-coffee-script', { 'for': 'coffee' }
-Plug 'koekeishiya/kwm', { 'dir': '~/.config/nvim/plugged/kwm/syntax/vim', 'for': 'kwm' }
 Plug 'fatih/vim-go', { 'for': 'go' }
 Plug 'digitaltoad/vim-pug', { 'for': 'sugarml.pug.jade.html' }
-Plug 'othree/yajs.vim', { 'for': 'javascript' }
 Plug 'hhsnopek/vim-sugarss', { 'for': 'sugarss.stylus.css' }
 Plug 'rust-lang/rust.vim', { 'for': 'rust' }
 Plug 'tpope/vim-markdown', { 'for': 'markdown' }
@@ -53,25 +57,33 @@ set nosmartindent
 set tabstop=2
 set shiftwidth=2
 set expandtab
-set clipboard=unnamed
+set clipboard+=unnamed
 set listchars=tab:\\t,extends:›,precedes:‹,nbsp:•,trail:•
 set ruler
 syntax enable
 
-" firewatch
+" Visual settings
 set termguicolors
 set background=dark
-colorscheme firewatch
+color challenger_deep
 
 " Statusline
 set statusline=[%M%n]\ %y\ %t\ %=\ %l:%c
 
 " ale
 let g:ale_fix_on_save = 1
+let g:ale_sign_error = '●'
+let g:ale_sign_warning = '.'
+let g:ale_lint_on_enter = 0
+let g:ale_fixers = {
+\   '*': ['remove_trailing_lines', 'trim_whitespace'],
+\   'javascript': ['eslint', 'prettier'],
+\   'python': ['yapf'],
+\}
 
 " Neovim/Python
-let g:python_host_prog='/usr/local/bin/python2'
-let g:python3_host_prog='/usr/local/bin/python3'
+let g:python_host_prog='/usr/bin/python'
+let g:python3_host_prog='/usr/bin/python3'
 
 " Editorconfig
 let g:EditorConfig_core_mode = 'external_command'
@@ -110,11 +122,11 @@ nnoremap <leader>a :cclose<CR>
 nnoremap <leader>ev :vsp $MYVIMRC<cr>
 nnoremap <leader>sv :source $MYVIMRC<cr>
 
-nnoremap <leader>eb :vsp ~/.bashrc<cr>
-nnoremap <leader>ea :vsp ~/.config/alacritty/alacritty.yml
+nnoremap <leader>eb :vsp /home/hhsnopek/.bashrc<cr>
+nnoremap <leader>ea :vsp /home/hhsnopek/.config/alacritty/alacritty.yml<cr>
 
-nnoremap <leader>ec :vsp ~/.config/nvim/plugged/vim-firewatch/colors/firewatch.vim<cr>
-nnoremap <leader>sc :source ~/.config/nvim/plugged/vim-firewatch/colors/firewatch.vim<cr>
+nnoremap <leader>ec :vsp /home/hhsnopek/.config/nvim/plugged/vim-firewatch/colors/firewatch.vim<cr>
+nnoremap <leader>sc :source /home/hhsnopek/.config/nvim/plugged/vim-firewatch/colors/firewatch.vim<cr>
 
 " Tab Controls
 nnoremap <Tab>l :tabn<cr>
@@ -126,8 +138,7 @@ inoremap <S-Tab> <C-d>
 " Format code
 nnoremap fj :%!python -m json.tool<cr>
 nnoremap fjs :!standard --fix %<cr>
-nnoremap fjsp :%!prettier --stdin --no-semi --single-quote<cr>
-nnoremap fjse :%!eslint --stdin<cr>
+nnoremap fjsp :%!prettier --stdin --parser babel<cr>
 nnoremap fx :%!xmllint --format %<cr>
 nnoremap rt :%s/\t/  /g<cr>
 
@@ -168,9 +179,6 @@ nnoremap <leader>c :set list!<cr>
 " Search adjustments
 nnoremap <leader>n :set hls!<cr>
 nnoremap / :set hlsearch<cr>/
-
-" Todo
-nnoremap etd :vsp ~/TODO<cr>
 
 " Notes
 nnoremap en :vsp $PWD/notes<cr>
@@ -247,7 +255,7 @@ function! Tabline()
     endif
 
     " format
-    let s .= (tabnr == tabpagenr() ? ' %#Title#' : '%#TabLine#')
+    let s .= (tabnr == tabpagenr() ? ' %#TabLineSel#' : '%#TabLine#')
     let s .= ' ' . tabnr .' '
     let s .= (tabnr == tabpagenr() ? '%#TabLineSel#' : '%#TabLine#')
     let s .= tabname
