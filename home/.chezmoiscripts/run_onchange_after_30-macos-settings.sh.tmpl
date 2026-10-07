@@ -1,0 +1,152 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+# Reruns when the shortcut export changes: {{ include ".macos/symbolichotkeys.plist" | sha256sum }}
+set -euo pipefail
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
+# Appearance, clock, sound
+defaults write NSGlobalDomain AppleInterfaceStyle -string Dark
+defaults write NSGlobalDomain AppleICUForce24HourTime -bool true
+defaults write NSGlobalDomain AppleMenuBarVisibleInFullscreen -bool true
+defaults write NSGlobalDomain SLSMenuBarUseBlurredAppearance -bool true
+defaults write NSGlobalDomain com.apple.sound.beep.volume -float 0.4272928535938263
+defaults write com.apple.menuextra.clock ShowAMPM -bool true
+defaults write com.apple.menuextra.clock ShowDate -int 0
+defaults write com.apple.menuextra.clock ShowDayOfWeek -bool true
+defaults write com.apple.menuextra.clock TimeAnnouncementsEnabled -bool false
+
+# Menu bar. Positions are pixel offsets from the right edge, read when each
+# app launches; Hidden Bar hides whatever sits left of its two dividers, so
+# these numbers decide which icons show.
+while IFS=$'\t' read -r domain item position; do
+	defaults write "$domain" "NSStatusItem Preferred Position $item" -float "$position"
+done <<'EOF'
+com.apple.controlcenter	BentoBox	134
+com.apple.controlcenter	BentoBox-0	144
+com.apple.controlcenter	Battery	273
+pl.maketheweb.cleanshotx	Item-0	315
+com.dwarvesv.minimalbar	hiddenbar_expandcollapse	341
+app.tuple.app	TupleStatusBarItem	349
+com.dwarvesv.minimalbar	hiddenbar_separate	373
+com.apple.controlcenter	WiFi	395
+org.pqrs.Karabiner-Menu	Item-0	447
+io.tailscale.ipn.macsys	Item-0	501
+com.1password.1password	bb3cc23c-6950-4e96-8b40-850e09f46934	539
+org.herf.Flux	Item-0	571
+com.dwarvesv.minimalbar	hiddenbar_terminate	591
+com.intelliscapesolutions.caffeine	Item-0	602
+keybase.Electron	Item-0	648
+me.paolino.fastpotify	Item-0	686
+org.pqrs.Karabiner-Console-User-Server	Item-0	756
+dev.kdrag0n.MacVirt	Item-0	785
+com.rippling.it.tray	Item-0	823
+EOF
+defaults write com.apple.controlcenter "NSStatusItem Visible BentoBox" -bool true
+for i in 0 1 2 3 4 5 6 7; do
+	defaults write com.apple.controlcenter "NSStatusItem Visible Item-$i" -bool false
+done
+defaults write com.apple.TextInputMenuAgent "NSStatusItem Visible Item-0" -bool false
+defaults write com.apple.controlcenter AutoHideMenuBarOption -int 3
+defaults -currentHost write com.apple.controlcenter AirplayReceiverEnabled -bool false
+defaults -currentHost write com.apple.controlcenter Battery -int 2
+defaults -currentHost write com.apple.controlcenter BatteryShowPercentage -bool false
+defaults -currentHost write com.apple.controlcenter NowPlaying -int 8
+defaults -currentHost write com.apple.controlcenter ScreenMirroring -int 8
+defaults -currentHost write com.apple.controlcenter VoiceControl -int 8
+
+# Keyboard: F1-F12 as function keys, Globe key does nothing
+defaults write NSGlobalDomain com.apple.keyboard.fnState -bool true
+defaults write com.apple.HIToolbox AppleFnUsageType -int 0
+defaults import com.apple.symbolichotkeys {{ joinPath .chezmoi.sourceDir ".macos/symbolichotkeys.plist" | quote }}
+/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u || true
+
+# Trackpad: no tap to click, no force click, right click in the bottom-right corner
+for domain in com.apple.AppleMultitouchTrackpad com.apple.driver.AppleBluetoothMultitouch.trackpad; do
+	defaults write "$domain" Clicking -bool false
+	defaults write "$domain" TrackpadThreeFingerDrag -bool false
+	defaults write "$domain" TrackpadCornerSecondaryClick -int 2
+	defaults write "$domain" TrackpadRightClick -bool false
+done
+defaults write NSGlobalDomain com.apple.trackpad.forceClick -bool false
+defaults write NSGlobalDomain ContextMenuGesture -int 1
+defaults -currentHost write NSGlobalDomain com.apple.trackpad.enableSecondaryClick -bool false
+defaults -currentHost write NSGlobalDomain com.apple.trackpad.trackpadCornerClickBehavior -int 1
+
+# Dock
+defaults write com.apple.dock autohide -bool true
+defaults write com.apple.dock tilesize -int 42
+defaults write com.apple.dock launchanim -bool false
+defaults write com.apple.dock show-recents -bool false
+defaults write com.apple.dock minimize-to-application -bool false
+defaults write com.apple.dock wvous-br-corner -int 1
+defaults write com.apple.dock wvous-br-modifier -int 0
+dockutil --remove all --no-restart
+for app in {{ range .dock }}{{ . | quote }} {{ end }}; do
+	[ -d "/Applications/$app.app" ] && dockutil --add "/Applications/$app.app" --no-restart
+done
+dockutil --add "$HOME/Downloads" --section others --view fan --display stack --sort dateadded --no-restart
+
+# Desktop, Stage Manager, Mission Control
+defaults write com.apple.WindowManager GloballyEnabled -bool false
+defaults write com.apple.WindowManager AutoHide -bool false
+defaults write com.apple.WindowManager HideDesktop -bool true
+defaults write com.apple.WindowManager StageManagerHideWidgets -bool false
+defaults write com.apple.WindowManager StandardHideWidgets -bool false
+defaults write com.apple.WindowManager AppWindowGroupingBehavior -int 1
+
+# Finder
+defaults write com.apple.finder FXPreferredViewStyle -string Nlsv
+defaults write com.apple.finder NewWindowTarget -string PfAF
+defaults write com.apple.finder FK_ArrangeBy -string "Date Created"
+defaults write com.apple.finder ShowHardDrivesOnDesktop -bool true
+defaults write com.apple.finder ShowSidebar -bool true
+
+# Screenshots, screen saver, login, notifications
+defaults write com.apple.screencapture style -string window
+defaults write com.apple.screencapture video -bool false
+defaults -currentHost write com.apple.screensaver idleTime -int 1200
+defaults -currentHost write com.apple.screensaver showClock -bool false
+defaults write com.apple.loginwindow TALLogoutSavesState -bool false
+defaults write com.apple.ncprefs summarize_previews -bool true
+defaults write com.apple.ActivityMonitor ShowCategory -int 100
+
+# Menu-bar apps
+defaults write com.intelliscapesolutions.caffeine ActivateOnLaunch -bool true
+defaults write com.intelliscapesolutions.caffeine SuppressLaunchMessage -bool true
+defaults write com.intelliscapesolutions.caffeine SendProblemReports -int 0
+
+defaults write org.herf.Flux firstrun -int 1719930525
+defaults write org.herf.Flux offer-qs -int 1
+defaults write org.herf.Flux version -int 3
+defaults write org.herf.Flux wakeTime -int 480
+
+defaults write com.dwarvesv.minimalbar alwaysHiddenSectionEnabled -bool true
+defaults write com.dwarvesv.minimalbar areSeparatorsHidden -bool false
+defaults write com.dwarvesv.minimalbar isAutoStart -bool true
+defaults write com.dwarvesv.minimalbar isShowPreferences -bool false
+defaults write com.dwarvesv.minimalbar useFullStatusBarOnExpandEnabled -bool false
+
+defaults write pl.maketheweb.TopNotch firstLaunch -bool false
+defaults write pl.maketheweb.TopNotch lastAcceptedEulaVersion -int 1
+defaults write pl.maketheweb.TopNotch LaunchAtLogin__hasMigrated -bool true
+defaults write pl.maketheweb.TopNotch hideMenubarIcon -bool true
+defaults write pl.maketheweb.TopNotch hideOnBuiltInOnly -bool false
+defaults write pl.maketheweb.TopNotch isEnabled -bool false
+defaults write pl.maketheweb.TopNotch roundCorners -bool true
+defaults write pl.maketheweb.TopNotch useDynamicWallpapers -bool false
+
+defaults write pl.maketheweb.cleanshotx analyticsAllowed -bool false
+defaults write pl.maketheweb.cleanshotx cameraShape -int 0
+defaults write pl.maketheweb.cleanshotx captureWithoutDesktopIcons -bool false
+defaults write pl.maketheweb.cleanshotx deletePopupAfterDragging -bool true
+defaults write pl.maketheweb.cleanshotx highlightClicks -bool true
+defaults write pl.maketheweb.cleanshotx popupAskForDestinationWhenSaving -bool false
+defaults write pl.maketheweb.cleanshotx popupSize -int 2
+defaults write pl.maketheweb.cleanshotx recordComputerAudio -bool true
+defaults write pl.maketheweb.cleanshotx snapInAnnotateCrop -bool true
+defaults write pl.maketheweb.cleanshotx SUAutomaticallyUpdate -bool false
+defaults write pl.maketheweb.cleanshotx SUEnableAutomaticChecks -bool false
+defaults write pl.maketheweb.cleanshotx transparentWindowBackground -bool false
+
+killall Dock Finder SystemUIServer ControlCenter 2>/dev/null || true
+{{ end -}}

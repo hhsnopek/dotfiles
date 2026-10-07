@@ -1,0 +1,39 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+# Reruns whenever the rendered Brewfile changes: {{ includeTemplate "private_dot_config/homebrew/Brewfile.tmpl" . | sha256sum }}
+set -euo pipefail
+eval "$(/opt/homebrew/bin/brew shellenv)"
+brew bundle --no-upgrade --file="$HOME/.config/homebrew/Brewfile"
+{{ else if eq .chezmoi.os "linux" -}}
+#!/bin/bash
+# apt: {{ .apt | join " " }}; neovim {{ .neovim }}
+set -euo pipefail
+
+missing=()
+for pkg in {{ .apt | join " " }}; do
+	dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q 'install ok installed' || missing+=("$pkg")
+done
+if ((${#missing[@]})); then
+	if [ -t 0 ] || sudo -n true 2>/dev/null; then
+		sudo apt-get install -y "${missing[@]}"
+	else
+		echo "chezmoi: needs 'sudo apt-get install ${missing[*]}'" >&2
+	fi
+fi
+
+# Ubuntu 24.04 ships Neovim 0.9, too old for the vim.pack config, so the
+# upstream release goes under ~/.local and needs no root.
+nvim_dir="$HOME/.local/opt/nvim-{{ .neovim }}"
+if [ ! -x "$nvim_dir/bin/nvim" ]; then
+	mkdir -p "$nvim_dir"
+	curl -fsSL "https://github.com/neovim/neovim/releases/download/v{{ .neovim }}/nvim-linux-x86_64.tar.gz" |
+		tar -xz -C "$nvim_dir" --strip-components=1
+fi
+mkdir -p "$HOME/.local/bin"
+ln -sfn "$nvim_dir/bin/nvim" "$HOME/.local/bin/nvim"
+
+uv=$(command -v uv || echo "$HOME/.local/bin/uv")
+if [ -x "$uv" ] && [ ! -x "$HOME/.local/bin/nvr" ]; then
+	"$uv" tool install neovim-remote
+fi
+{{ end -}}

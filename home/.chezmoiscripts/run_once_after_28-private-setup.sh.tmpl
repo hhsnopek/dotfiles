@@ -1,0 +1,6 @@
+{{ if and .private (lookPath "op") -}}
+#!/bin/bash
+# The steps live in 1Password so this public repo never names where they come from.
+set -euo pipefail
+op --account {{ .opAccount | quote }} read "op://dotfiles/Private setup/notesPlain" | bash -euo pipefail
+{{ end -}}

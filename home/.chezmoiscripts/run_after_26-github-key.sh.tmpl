@@ -1,0 +1,26 @@
+{{ if and .sshKeyItem (lookPath "gh") -}}
+#!/bin/bash
+# Runs on every apply until GitHub has this machine's key; the marker keeps
+# later applies to a file check.
+set -euo pipefail
+pub="$HOME/.ssh/id_ed25519.pub"
+[ -f "$pub" ] || exit 0
+fingerprint=$(ssh-keygen -lf "$pub" | awk '{print $2}')
+marker="$HOME/.local/state/dotfiles/github-key-${fingerprint//\//_}"
+[ -f "$marker" ] && exit 0
+
+if ! gh auth status >/dev/null 2>&1; then
+	echo "chezmoi: run 'gh auth login -s admin:public_key' to add this machine's SSH key to GitHub" >&2
+	exit 0
+fi
+if ! gh ssh-key list | grep -qF "$(awk '{print $2}' "$pub")"; then
+	if ! gh ssh-key add "$pub" --title {{ printf "%s (%s)" .chezmoi.hostname .sshKeyItem | quote }} --type authentication; then
+		echo "chezmoi: run 'gh auth refresh -h github.com -s admin:public_key', then chezmoi apply" >&2
+		exit 0
+	fi
+	echo "chezmoi: authorize the new key for SAML SSO orgs at https://github.com/settings/keys" >&2
+	{{ if eq .chezmoi.os "darwin" }}open{{ else }}xdg-open{{ end }} https://github.com/settings/keys || true
+fi
+mkdir -p "${marker%/*}"
+touch "$marker"
+{{ end -}}

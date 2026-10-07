@@ -1,0 +1,22 @@
+#!/bin/bash
+# Reruns when user.js changes: {{ include ".firefox/user.js" | sha256sum }}
+set -euo pipefail
+{{ if eq .chezmoi.os "darwin" -}}
+root="$HOME/Library/Application Support/Firefox"
+{{- else -}}
+root="$HOME/snap/firefox/common/.mozilla/firefox"
+[ -d "$root" ] || root="$HOME/.mozilla/firefox"
+{{- end }}
+ini="$root/profiles.ini"
+if [ ! -f "$ini" ]; then
+	echo "chezmoi: start Firefox once, then chezmoi apply again, to install user.js" >&2
+	exit 1
+fi
+
+# The profile this Firefox install opens, from its [Install...] section.
+profile=$(awk -F= '/^\[Install/ {install = 1; next} /^\[/ {install = 0} install && $1 == "Default" {print $2; exit}' "$ini")
+if [ -z "$profile" ] || [ ! -d "$root/$profile" ]; then
+	echo "chezmoi: no default Firefox profile in $ini" >&2
+	exit 1
+fi
+cp {{ joinPath .chezmoi.sourceDir ".firefox/user.js" | quote }} "$root/$profile/user.js"

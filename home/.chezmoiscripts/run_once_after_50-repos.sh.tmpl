@@ -1,0 +1,6 @@
+#!/bin/bash
+set -euo pipefail
+git -C {{ .chezmoi.workingTree | quote }} config core.hooksPath .githooks
+if [ ! -d "$HOME/dev/fzf-git.sh" ]; then
+	git clone https://github.com/junegunn/fzf-git.sh.git "$HOME/dev/fzf-git.sh"
+fi

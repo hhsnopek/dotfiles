@@ -1,0 +1,46 @@
+node: "24"
+
+npm:
+  - "@redocly/cli"
+  - corepack
+  - little-coder
+  - neovim
+  - squawk-cli
+  - typescript
+  - typescript-language-server
+
+neovim: "0.12.5"
+
+display:
+  resolution: "1800x1169"
+  hz: 120
+
+cleanshot:
+  version: "4.8.11"
+  sha256: "298afb3d085ee6343dae954ba2a7429bd613e6ad9e942c8f79008688ceb11a81"
+
+apt:
+  - git-lfs
+  - htop
+  - shellcheck
+  - shfmt
+  - tree
+
+dock:
+  - Firefox
+  - Slack
+  - Ghostty
+  - Tuple
+  - Spotifast
+
+loginItems:
+  - Caffeine
+  - CleanShot X
+  - Clocker
+  - Flux
+  - Hidden Bar
+  - Keybase
+  - OrbStack
+  - Spotifast
+  - TopNotch
+  - Tuple

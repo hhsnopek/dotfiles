@@ -1,0 +1,53 @@
+{{- /* Waits, like 25-1password, for the 1Password CLI to exist before rendering. */ -}}
+{{ if and (eq .chezmoi.os "darwin") (lookPath "op") -}}
+#!/bin/bash
+# Joins the Wi-Fi networks stored in 1Password (tag "wifi") through a
+# configuration profile, because networksetup cannot add WPA3 networks.
+# SSIDs stay in 1Password: unique names can locate a home on Wi-Fi maps.
+set -euo pipefail
+op() { command op --account {{ .opAccount | quote }} "$@"; }
+if [ "$(launchctl managername)" != Aqua ]; then
+	echo "chezmoi: the Wi-Fi profile needs the desktop; run chezmoi apply in a terminal on this Mac" >&2
+	exit 1
+fi
+
+# Read the list first: a failed op inside the loop's input would go unnoticed
+# and produce an empty profile, which macOS rejects.
+networks=$(op item list --vault dotfiles --tags wifi --format json | jq -r '.[] | [.id, .title] | @tsv')
+if [ -z "$networks" ]; then
+	echo "chezmoi: no Wi-Fi items tagged wifi in the dotfiles vault" >&2
+	exit 1
+fi
+
+dir=$(mktemp -d)
+chmod 700 "$dir"
+profile="$dir/wifi.mobileconfig"
+plutil -create xml1 "$profile"
+plutil -insert PayloadType -string Configuration "$profile"
+plutil -insert PayloadVersion -integer 1 "$profile"
+plutil -insert PayloadIdentifier -string dotfiles.wifi "$profile"
+plutil -insert PayloadUUID -string "$(uuidgen)" "$profile"
+plutil -insert PayloadDisplayName -string "Wi-Fi networks" "$profile"
+plutil -insert PayloadContent -array "$profile"
+
+i=0
+while IFS=$'\t' read -r id ssid; do
+	password=$(op read "op://dotfiles/$id/wireless network password")
+	plutil -insert PayloadContent -dictionary -append "$profile"
+	plutil -insert "PayloadContent.$i.PayloadType" -string com.apple.wifi.managed "$profile"
+	plutil -insert "PayloadContent.$i.PayloadVersion" -integer 1 "$profile"
+	plutil -insert "PayloadContent.$i.PayloadIdentifier" -string "dotfiles.wifi.$i" "$profile"
+	plutil -insert "PayloadContent.$i.PayloadUUID" -string "$(uuidgen)" "$profile"
+	plutil -insert "PayloadContent.$i.SSID_STR" -string "$ssid" "$profile"
+	plutil -insert "PayloadContent.$i.EncryptionType" -string Any "$profile"
+	plutil -insert "PayloadContent.$i.Password" -string "$password" "$profile"
+	plutil -insert "PayloadContent.$i.AutoJoin" -bool true "$profile"
+	i=$((i + 1))
+done <<<"$networks"
+
+open "$profile"
+echo "chezmoi: approve \"Wi-Fi networks\" in System Settings > General > Device Management" >&2
+# Opening stages a copy for approval; give it time before the plaintext goes.
+sleep 10
+rm -rf "$dir"
+{{ end -}}

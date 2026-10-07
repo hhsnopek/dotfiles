@@ -1,0 +1,15 @@
+# Added by OrbStack: 'orb' SSH host for Linux machines
+# This only works if it's at the top of ssh_config (before any Host blocks).
+# This won't be added again if you remove it.
+Include ~/.orbstack/ssh/config
+
+Host github.com
+  AddKeysToAgent yes
+  IdentityFile ~/.ssh/id_ed25519
+  StrictHostKeyChecking accept-new
+
+Host router 192.168.1.1
+  LogLevel ERROR
+
+Host 100.67.55.101 100.68.15.2 dpi 192.168.1.28
+  LogLevel ERROR

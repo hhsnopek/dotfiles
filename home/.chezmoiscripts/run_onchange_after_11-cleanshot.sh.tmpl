@@ -1,0 +1,33 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+# The CleanShot licence covers 4.x only and Homebrew's cask has moved to 5, so
+# this installs the pinned 4.x build from CleanShot's own update server.
+# CleanShot X {{ .cleanshot.version }}, sha256 {{ .cleanshot.sha256 }}
+set -euo pipefail
+eval "$(/opt/homebrew/bin/brew shellenv)"
+version={{ .cleanshot.version | quote }}
+app="/Applications/CleanShot X.app"
+have=$(defaults read "$app/Contents/Info" CFBundleShortVersionString 2>/dev/null || true)
+
+# A Homebrew-tracked copy gets upgraded to 5 by `brew upgrade --greedy`.
+if brew list --cask cleanshot >/dev/null 2>&1; then
+	if [ "$have" = "$version" ]; then
+		rm -rf "$HOMEBREW_PREFIX/Caskroom/cleanshot"
+	else
+		brew uninstall --cask cleanshot
+		have=""
+	fi
+fi
+[ "$have" = "$version" ] && exit 0
+
+dir=$(mktemp -d)
+trap 'hdiutil detach -quiet "$dir/mnt" 2>/dev/null || true; rm -rf "$dir"' EXIT
+curl -fsSL -o "$dir/cleanshot.dmg" "https://updates.getcleanshot.com/v3/CleanShot-X-$version.dmg"
+echo {{ printf "%s  " .cleanshot.sha256 | quote }}"$dir/cleanshot.dmg" | shasum -a 256 -c -
+mkdir "$dir/mnt"
+hdiutil attach -nobrowse -readonly -mountpoint "$dir/mnt" "$dir/cleanshot.dmg" >/dev/null
+pkill -x "CleanShot X" || true
+rm -rf "$app"
+ditto "$dir/mnt/CleanShot X.app" "$app"
+open -g -a "$app" || true
+{{ end -}}

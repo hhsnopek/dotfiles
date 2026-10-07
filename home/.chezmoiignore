@@ -1,0 +1,8 @@
+{{ if ne .chezmoi.os "darwin" }}
+.bash_profile
+.ssh
+.config/homebrew
+.config/karabiner
+.config/little-coder
+.config/tfenv
+{{ end }}

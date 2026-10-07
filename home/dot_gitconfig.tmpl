@@ -1,0 +1,68 @@
+[init]
+  defaultBranch = main
+
+[user]
+	name = Henry Snopek
+  userConfigOnly = true
+
+[include]
+  path = ~/.gitconfig.personal
+
+[includeIf "gitdir:~/dev/clerk/"]
+  path = ~/.gitconfig.clerk
+
+[core]
+	excludesfile = ~/.gitignore
+	pager = less -S
+  editor = nvr --remote-wait-silent
+
+[branch]
+	autosetupmerge = always
+	autosetuprebase = always
+
+[pull]
+	rebase = true
+
+[push]
+	default = simple
+
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	required = true
+
+[diff]
+	tool = nvr
+
+[difftool "nvr"]
+	cmd = nvr -s -d $LOCAL $REMOTE
+
+[merge]
+	tool = nvr
+	conflictStyle = zdiff3
+
+[mergetool "nvr"]
+	cmd = nvr -s -d $LOCAL $BASE $REMOTE $MERGED -c 'wincmd J | wincmd ='
+
+[status]
+	submoduleSummary = true
+
+[commit]
+	gpgsign = {{ .signCommits }}
+
+[gpg]
+	program = {{ if eq .chezmoi.os "darwin" }}/opt/homebrew/bin/gpg{{ else }}gpg{{ end }}
+
+[alias]
+	tree = log --graph --pretty=format:'%Cred%h%Creset %an: %s - %Creset %C(yellow)%d%Creset %Cgreen(%cr)%Creset' --abbrev-commit --date=relative
+  loctree = tree main...
+	summary = log --abbrev-commit --pretty=oneline --author="Henry Snopek" --since=last.mon --reverse
+	last = show -s --pretty=format:'%Cred%h%Creset %an: %s - %Creset %C(yellow)%d%Creset %Cgreen(%cr)%Creset' --abbrev-commit --date=relative
+  wip = commit -a -S -m '[wip]'
+  unwip = reset --soft HEAD^
+  hash = rev-parse --short HEAD
+
+[url "ssh://git@github.com/"]
+	insteadOf = https://github.com/
+[url "git@github.com:clerk/"]
+	insteadOf = https://github.com/clerk/

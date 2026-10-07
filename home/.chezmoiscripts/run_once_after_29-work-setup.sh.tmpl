@@ -1,0 +1,6 @@
+{{ if and .work (lookPath "op") -}}
+#!/bin/bash
+# Installs tools from private work repositories; the steps live in 1Password.
+set -euo pipefail
+op --account {{ .opAccount | quote }} read "op://dotfiles/Work setup/notesPlain" | bash -euo pipefail
+{{ end -}}

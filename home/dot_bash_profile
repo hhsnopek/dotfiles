@@ -1,0 +1,23 @@
+# silence OSX wanting zsh over bash
+export BASH_SILENCE_DEPRECATION_WARNING=1
+
+if [ -f ~/.bashrc ]; then . ~/.bashrc; fi
+
+# github token from gh keyring for MCP servers. Must live here, not in
+# .bashrc: claude is launched via `bash -l -c claude` (tmux/mobile-claude),
+# a non-interactive login shell that .bashrc's interactive guard exits early.
+GH_BIN="$(command -v gh || echo /opt/homebrew/bin/gh)"
+if [ -x "$GH_BIN" ]; then
+  GITHUB_PERSONAL_ACCESS_TOKEN="$("$GH_BIN" auth token 2>/dev/null)"
+  export GITHUB_PERSONAL_ACCESS_TOKEN
+fi
+unset GH_BIN
+
+# Added by OrbStack: command-line tools and integration
+# This won't be added again if you remove it.
+source ~/.orbstack/shell/init.bash 2>/dev/null || :
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+

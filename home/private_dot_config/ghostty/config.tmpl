@@ -1,0 +1,27 @@
+font-family = Monaco
+{{- if eq .chezmoi.os "linux" }}
+font-family = DejaVu Sans Mono
+{{- end }}
+font-size = 11
+theme = "distilled"
+shell-integration = bash
+{{- if eq .chezmoi.os "darwin" }}
+# Pinned so bash integration never lands on zsh, which rejects its --posix
+# flag; the login shell only switches to bash once 40-system has run.
+command = /opt/homebrew/bin/bash
+{{- end }}
+window-decoration = none
+window-show-tab-bar = never
+macos-non-native-fullscreen = visible-menu
+fullscreen = true
+bold-color = bright
+desktop-notifications = true
+bell-features = attention
+font-thicken = true
+adjust-cell-width = -10%
+keybind = shift+enter=text:\x1b\r
+{{- if eq .chezmoi.os "linux" }}
+# Ghostty's default io_uring loop counts its idle waits as iowait, which
+# keeps CPU boost and pressure stats pinned on this kernel.
+async-backend = epoll
+{{- end }}

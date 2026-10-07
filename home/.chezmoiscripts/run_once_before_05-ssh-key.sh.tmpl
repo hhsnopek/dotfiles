@@ -1,0 +1,12 @@
+{{- /* Runs before everything else: the gitconfig sends https://github.com/ clones over SSH, Homebrew taps included. */ -}}
+{{ if and .sshKeyItem (lookPath "op") -}}
+#!/bin/bash
+set -euo pipefail
+[ -f "$HOME/.ssh/id_ed25519" ] && exit 0
+op() { command op --account {{ .opAccount | quote }} "$@"; }
+mkdir -p "$HOME/.ssh"
+chmod 700 "$HOME/.ssh"
+umask 077
+op read {{ printf "op://dotfiles/%s/private key?ssh-format=openssh" .sshKeyItem | quote }} >"$HOME/.ssh/id_ed25519"
+op read {{ printf "op://dotfiles/%s/public key" .sshKeyItem | quote }} >"$HOME/.ssh/id_ed25519.pub"
+{{ end -}}

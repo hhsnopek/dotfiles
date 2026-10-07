@@ -1,0 +1,29 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+set -euo pipefail
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
+if ! sudo -n true 2>/dev/null && [ ! -t 0 ]; then
+	echo "chezmoi: system changes need sudo; run bootstrap.sh in a terminal on this Mac" >&2
+	exit 1
+fi
+
+bash="$HOMEBREW_PREFIX/bin/bash"
+grep -qxF "$bash" /etc/shells || echo "$bash" | sudo tee -a /etc/shells >/dev/null
+if [ "$(dscl . -read "/Users/$USER" UserShell | awk '{print $2}')" != "$bash" ]; then
+	sudo chsh -s "$bash" "$USER"
+fi
+{{- if .tailscaleSSH }}
+
+pgrep -x tailscaled >/dev/null || sudo brew services start tailscale
+if ! tailscale status >/dev/null 2>&1; then
+	echo "chezmoi: run 'sudo tailscale up --ssh' to join the tailnet" >&2
+fi
+{{- end }}
+{{ else if eq .chezmoi.os "linux" -}}
+#!/bin/bash
+set -euo pipefail
+if command -v gsettings >/dev/null; then
+	gsettings set org.gnome.desktop.input-sources xkb-options "['caps:escape']"
+fi
+{{ end -}}

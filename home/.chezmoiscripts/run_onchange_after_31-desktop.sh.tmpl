@@ -1,0 +1,56 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+# Reruns when the notification export changes: {{ include ".macos/ncprefs.plist" | sha256sum }}
+# or the desktop widget layout does: {{ include ".macos/widgets.plist" | sha256sum }}
+set -euo pipefail
+eval "$(/opt/homebrew/bin/brew shellenv)"
+apps=({{ range .loginItems }}{{ . | quote }} {{ end }})
+
+# Start them now as well as at login; Caffeine in particular keeps a fresh
+# Mac awake through the rest of setup.
+for app in "${apps[@]}"; do
+	[ -d "/Applications/$app.app" ] && open -g -a "/Applications/$app.app" || true
+done
+
+# AppleScript and the default-browser dialog need the logged-in desktop. Over
+# SSH this fails instead of hanging, so the next local apply runs it again.
+if [ "$(launchctl managername)" != Aqua ]; then
+	echo "chezmoi: login items and default browser need the desktop; run chezmoi apply in a terminal on this Mac" >&2
+	exit 1
+fi
+
+existing=$(osascript -e 'tell application "System Events" to get the name of every login item')
+for app in "${apps[@]}"; do
+	[ -d "/Applications/$app.app" ] || continue
+	case ", $existing, " in
+	*", $app, "*) ;;
+	*) osascript -e "tell application \"System Events\" to make login item at end with properties {path:\"/Applications/$app.app\", hidden:false}" >/dev/null ;;
+	esac
+done
+
+if [ -d /Applications/Firefox.app ]; then
+	defaultbrowser firefox
+fi
+
+# Built-in screen at the same scaled size, when this model offers it.
+mode={{ printf "res:%s hz:%v color_depth:8 scaling:on" .display.resolution .display.hz | quote }}
+builtin=$(displayplacer list | awk '/^Persistent screen id:/ {id = $4} /^Type: MacBook built in screen/ {print id; exit}')
+if [ -n "$builtin" ] && displayplacer list | grep -qF "$mode"; then
+	displayplacer "id:$builtin $mode enabled:true origin:(0,0) degree:0"
+fi
+
+# Per-app notification settings, merged so this Mac's Focus schedules stay.
+current=$(mktemp)
+defaults export com.apple.ncprefs "$current"
+for key in apps content_visibility summarize_previews sort_order play_forwarded_notifications_sounds; do
+	plutil -replace "$key" -xml "$(plutil -extract "$key" xml1 -o - {{ joinPath .chezmoi.sourceDir ".macos/ncprefs.plist" | quote }})" "$current"
+done
+defaults import com.apple.ncprefs "$current"
+
+# Desktop widgets, which a new Mac starts with a default set of.
+defaults export com.apple.notificationcenterui "$current"
+plutil -replace widgets -xml "$(plutil -extract widgets xml1 -o - {{ joinPath .chezmoi.sourceDir ".macos/widgets.plist" | quote }})" "$current"
+defaults import com.apple.notificationcenterui "$current"
+rm -f "$current"
+killall usernoted NotificationCenter 2>/dev/null || true
+{{ end -}}

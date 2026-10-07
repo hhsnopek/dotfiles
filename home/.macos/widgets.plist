@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>widgets</key>
+	<dict>
+		<key>DesktopWidgetPlacementStorage</key>
+		<data>
+		YnBsaXN0MDDSAQIDBF8QFENvbXBhdGliaWxpdHlWZXJzaW9uXxAQTnVtYmVy
+		ZWREaXNwbGF5cxQAAAAAAAAAAAAAAAAAAAABoAgNJDdIAAAAAAAAAQEAAAAA
+		AAAABQAAAAAAAAAAAAAAAAAAAEk=
+		</data>
+		<key>instances</key>
+		<array/>
+		<key>vers</key>
+		<integer>1</integer>
+	</dict>
+</dict>
+</plist>
