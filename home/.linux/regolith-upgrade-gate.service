@@ -1,0 +1,8 @@
+[Unit]
+Description=Allow Ubuntu release upgrades only once Regolith publishes the next release
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/regolith-upgrade-gate

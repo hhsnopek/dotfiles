@@ -1,0 +1,23 @@
+#!/bin/bash
+# regolith-upgrade-gate: let Ubuntu offer its next LTS only once Regolith's
+# stable repo publishes it, since upgrading sooner leaves the desktop without
+# its packages. It fails closed: with no answer, upgrades stay off.
+set -uo pipefail
+conf=/etc/update-manager/release-upgrades
+current=$(lsb_release -cs)
+
+# meta-release-lts lists the LTS releases in order; the next one is the first
+# supported release after this one.
+next=$(curl -fsSL --max-time 30 https://changelogs.ubuntu.com/meta-release-lts |
+	awk -v cur="$current" '
+		$1 == "Dist:" { if (seen && !cand) cand = $2; if ($2 == cur) seen = 1 }
+		$1 == "Supported:" && cand { if ($2 == 1) { print cand; exit } cand = "" }')
+
+prompt=never
+if [ -n "$next" ] && curl -fsI --max-time 30 "https://archive.regolith-desktop.com/ubuntu/stable/dists/$next/Release" >/dev/null; then
+	prompt=lts
+fi
+if ! grep -qx "Prompt=$prompt" "$conf"; then
+	sed -i "s/^Prompt=.*/Prompt=$prompt/" "$conf"
+	logger -t regolith-upgrade-gate "release upgrades set to Prompt=$prompt (next LTS: ${next:-none})"
+fi

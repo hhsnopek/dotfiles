@@ -1,0 +1,11 @@
+[Unit]
+Description=Check daily whether Regolith publishes the next Ubuntu release
+
+[Timer]
+OnBootSec=5min
+OnCalendar=daily
+RandomizedDelaySec=1h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

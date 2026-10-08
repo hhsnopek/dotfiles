@@ -1,0 +1,16 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/bin/bash
+# Reruns when the gate changes: {{ include ".linux/regolith-upgrade-gate" | sha256sum }} {{ include ".linux/regolith-upgrade-gate.service" | sha256sum }} {{ include ".linux/regolith-upgrade-gate.timer" | sha256sum }}
+set -euo pipefail
+dpkg-query -W regolith-desktop >/dev/null 2>&1 || exit 0
+if ! { [ -t 0 ] || sudo -n true 2>/dev/null; }; then
+	echo "chezmoi: run chezmoi apply in a terminal, to install the Ubuntu upgrade gate" >&2
+	exit 1
+fi
+src={{ joinPath .chezmoi.sourceDir ".linux" | quote }}
+sudo install -m 755 "$src/regolith-upgrade-gate" /usr/local/sbin/regolith-upgrade-gate
+sudo install -m 644 "$src/regolith-upgrade-gate.service" "$src/regolith-upgrade-gate.timer" /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now regolith-upgrade-gate.timer
+sudo systemctl start regolith-upgrade-gate.service
+{{ end -}}

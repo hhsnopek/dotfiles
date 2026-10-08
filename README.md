@@ -50,6 +50,7 @@ Answer yes to Personal and no to Private and Work, so nothing from Clerk lands o
 | `31-desktop` | Menu-bar apps at login, Firefox as default browser, display scaling, per-app notification settings, no desktop widgets | |
 | `35-firefox` | `user.js` with the prefs Firefox Sync skips | Same, in the snap's profile |
 | `40-system` | Homebrew bash as the login shell, optional Tailscale SSH | Caps Lock as Escape |
+| `41-upgrade-gate` | | Holds Ubuntu release upgrades until Regolith's stable repo publishes the next release |
 | `50-repos` | Commit hook, fzf-git.sh | Commit hook, fzf-git.sh |
 
 Secrets come from the `dotfiles` vault in 1Password while the scripts run: this machine's SSH key, the GPG signing keys, the Wi-Fi passwords, the f.lux location, the database service files on work machines, and the Personal, Private and Work setup notes.
