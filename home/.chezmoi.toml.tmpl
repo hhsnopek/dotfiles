@@ -9,6 +9,9 @@
 {{- $work := promptBoolOnce . "work" "Run the private Work setup note from 1Password, and set up Clerk repos and keys" false -}}
 {{- $sshKeyItem := promptStringOnce . "sshKeyItem" "1Password item in the dotfiles vault holding this machine's SSH key (blank for none)" "" -}}
 sourceDir = {{ .chezmoi.workingTree | quote }}
+# Ubuntu shells use umask 002; pinning it keeps file modes the same whichever
+# shell runs chezmoi, and the same as on the Macs.
+umask = 0o022
 
 [data]
 tailscaleSSH = {{ $tailscaleSSH }}
