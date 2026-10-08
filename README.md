@@ -1,13 +1,13 @@
 # Dotfiles . . .
 > Here lies all my dotfiles that I use on all my machines, cheers ☕️
 
-Macs and an Ubuntu laptop, all managed with [chezmoi]. No secrets live here: anything private comes out of [1Password] at setup time, and [gitleaks] stops any commit or push that holds one.
+Work Macs and a personal Ubuntu laptop, all managed with [chezmoi]. No secrets live here: anything private comes out of [1Password] at setup time, and [gitleaks] stops any commit or push that holds one.
 
 ## Getting Started
 *NOTE*: Run the bootstrap in a terminal on the Mac itself. It asks for your password once, and the steps that need the desktop wait for the next local run.
 
 ### Install Requirements
-- macOS, or Ubuntu with [chezmoi]
+- macOS, or Ubuntu with [Regolith] and [chezmoi]
 
 That's it. The bootstrap installs [Homebrew], [1Password], [chezmoi] and [gh] when they're missing.
 
@@ -17,7 +17,7 @@ git clone https://github.com/hhsnopek/dotfiles.git ~/dev/hhsnopek/dotfiles
 ~/dev/hhsnopek/dotfiles/bootstrap.sh
 ```
 
-On a fresh Mac, `git` first offers to install Apple's developer tools; accept, then rerun the clone. Partway through, the bootstrap waits for you to sign in to 1Password and turn on Settings → Developer → Integrate with 1Password CLI, then signs gh in to GitHub. Then chezmoi asks about the Tailscale build, commit signing, the Private and Work setup notes, and this machine's SSH key. Rerun the bootstrap whenever something was skipped; every step checks before it acts.
+On a fresh Mac, `git` first offers to install Apple's developer tools; accept, then rerun the clone. Partway through, the bootstrap waits for you to sign in to 1Password and turn on Settings → Developer → Integrate with 1Password CLI, then signs gh in to GitHub. Then chezmoi asks about the Tailscale build, commit signing, this machine's personal GPG key, the Private, Personal and Work setup notes, and this machine's SSH key. Rerun the bootstrap whenever something was skipped; every step checks before it acts.
 
 On Ubuntu:
 ```bash
@@ -25,10 +25,13 @@ sudo snap install chezmoi --classic
 chezmoi init --apply --source ~/dev/hhsnopek/dotfiles hhsnopek/dotfiles
 ```
 
+Answer yes to Personal and no to Private and Work, so nothing from Clerk lands on the laptop, and give the ID of the laptop's own Gmail GPG key. sudo asks for your password for apt, and 1Password asks you to approve the Personal setup note. Everything else installs under `$HOME`, with no root.
+
 ### After the First Run
 1. Approve what macOS asks for: Karabiner-Elements' driver and Input Monitoring, the "Wi-Fi networks" profile under Device Management, and Firefox as the default browser. Authorize the new SSH key for SSO on GitHub, then rerun the bootstrap.
 2. Sign in to Slack, Tailscale, gcloud (`gcloud auth login --update-adc`), Claude Code and its `/mcp` servers, and Firefox Sync, then tick Enable synchronization in Multi-Account Containers. Activate CleanShot with the `CleanShot X licence` item in 1Password.
 3. Log out and back in, so the keyboard and shortcut settings take effect.
+4. On Ubuntu, open Ghidra once and check GhidraMCP is ticked under File → Install Extensions.
 
 ## What's Inside
 | Script | macOS | Linux |
@@ -38,19 +41,24 @@ chezmoi init --apply --source ~/dev/hhsnopek/dotfiles hhsnopek/dotfiles
 | `11-cleanshot` | CleanShot X pinned to the 4.x build the licence covers, from CleanShot's own server with a checksum | |
 | `12-utc-clock` | The UTC menu bar clock, built from its pinned source tag | |
 | `20-toolchains` | Node through `n`, npm globals, rustup and cross, Claude Code | |
-| `25-1password` | GPG key, f.lux location, database service files on work machines | GPG key, when chosen |
+| `21-linux-tools` | | Go, Rust, uv, Pi on its own Node, JDK 21, Maven, Ghidra with ghidra-mcp, and Engram as a user service, each pinned and under `$HOME` |
+| `25-1password` | The Clerk GPG key on work machines, this machine's personal GPG key, f.lux location, database service files on work machines | This machine's personal GPG key |
 | `26-github-key` | Adds this machine's SSH key to GitHub, opens the SSO page | Same |
 | `27-wifi` | Wi-Fi networks tagged `wifi` in 1Password, as a profile to approve | |
-| `28-private-setup`, `29-work-setup` | The 1Password notes of the same names, when chosen | Same |
+| `28-personal-setup`, `28-private-setup`, `29-work-setup` | The 1Password notes of the same names, when chosen | Same |
 | `30-macos-settings` | Dock, Finder, trackpad, keyboard shortcuts, menu-bar app settings | |
 | `31-desktop` | Menu-bar apps at login, Firefox as default browser, display scaling, per-app notification settings, no desktop widgets | |
-| `35-firefox` | `user.js` with the prefs Firefox Sync skips | Same |
+| `35-firefox` | `user.js` with the prefs Firefox Sync skips | Same, in the snap's profile |
 | `40-system` | Homebrew bash as the login shell, optional Tailscale SSH | Caps Lock as Escape |
 | `50-repos` | Commit hook, fzf-git.sh | Commit hook, fzf-git.sh |
 
-Secrets come from the `dotfiles` vault in 1Password while the scripts run: this machine's SSH key, the GPG signing key, the Wi-Fi passwords, the f.lux location, the database service files on work machines, and the Private and Work setup notes.
+Secrets come from the `dotfiles` vault in 1Password while the scripts run: this machine's SSH key, the GPG signing keys, the Wi-Fi passwords, the f.lux location, the database service files on work machines, and the Personal, Private and Work setup notes.
 
-Caps Lock is Escape on macOS through [Karabiner-Elements]. Per-machine tweaks go in `~/.bashrc.local` and `~/.tmux.local.conf`, which this repo never touches.
+Personal repos commit as my Gmail address, signed with a GPG key of the machine's own. Repos under `~/dev/clerk` commit as my Clerk address with the Clerk key, and Clerk's repos, keys and shell helpers only come with the Work answer.
+
+Caps Lock is Escape on macOS through [Karabiner-Elements], and on Ubuntu through GNOME's `caps:escape`. On Ubuntu, Regolith's look and status bar come from `~/.config/regolith3`: a click on the bar's UTC clock copies an RFC 3339 timestamp, and `brewski` runs apt and snap upkeep the way it runs Homebrew on the Macs.
+
+Per-machine tweaks go in `~/.bashrc.local` and `~/.tmux.local.conf`, which this repo never touches.
 
 [chezmoi]: https://www.chezmoi.io
 [1Password]: https://1password.com
@@ -58,3 +66,4 @@ Caps Lock is Escape on macOS through [Karabiner-Elements]. Per-machine tweaks go
 [Homebrew]: https://brew.sh
 [gh]: https://cli.github.com
 [Karabiner-Elements]: https://karabiner-elements.pqrs.org
+[Regolith]: https://regolith-desktop.com
