@@ -25,5 +25,10 @@ fi
 set -euo pipefail
 if command -v gsettings >/dev/null; then
 	gsettings set org.gnome.desktop.input-sources xkb-options "['caps:escape']"
+	# GNOME's night light stands in for the Macs' f.lux, sunset to sunrise.
+	color=org.gnome.settings-daemon.plugins.color
+	gsettings set "$color" night-light-enabled true
+	gsettings set "$color" night-light-schedule-automatic true
+	gsettings set "$color" night-light-temperature 3149
 fi
 {{ end -}}

@@ -11,6 +11,14 @@ if [ "$("$go_dir/bin/go" env GOVERSION 2>/dev/null)" != "go{{ .linux.go }}" ]; t
 	mkdir -p "$go_dir"
 	curl -fsSL "https://go.dev/dl/go{{ .linux.go }}.linux-amd64.tar.gz" | tar -xz -C "$go_dir" --strip-components=1
 fi
+for module in {{ .linux.goTools | join " " }}; do
+	name=${module##*/}
+	if [[ $name == v[0-9]* ]]; then
+		name=${module%/*}
+		name=${name##*/}
+	fi
+	[ -x "$HOME/go/bin/$name" ] || GOPATH="$HOME/go" "$go_dir/bin/go" install "$module@latest"
+done
 
 if [ ! -x "$HOME/.cargo/bin/rustup" ]; then
 	curl --proto '=https' --tlsv1.2 -fsSL https://sh.rustup.rs | sh -s -- -y --no-modify-path
@@ -19,6 +27,36 @@ fi
 if [ ! -x "$HOME/.local/bin/uv" ]; then
 	curl -fsSL https://astral.sh/uv/install.sh | env UV_NO_MODIFY_PATH=1 sh
 fi
+[ -x "$HOME/.local/bin/hf" ] || "$HOME/.local/bin/uv" tool install huggingface_hub
+
+# Single-binary tools. Each reports its version differently, so the pinned
+# version is recorded beside it instead of parsed back out.
+versions="$HOME/.local/state/dotfiles/versions"
+mkdir -p "$versions"
+fetch() {
+	local name=$1 version=$2 url=$3 member=${4:-} tmp
+	[ -x "$HOME/.local/bin/$name" ] && [ "$(cat "$versions/$name" 2>/dev/null)" = "$version" ] && return
+	tmp=$(mktemp)
+	case $url in
+	*.tar.gz) curl -fsSL "$url" | tar -xzO "$member" >"$tmp" ;;
+	*.gz) curl -fsSL "$url" | gunzip >"$tmp" ;;
+	*) curl -fsSL -o "$tmp" "$url" ;;
+	esac
+	chmod 755 "$tmp"
+	mv "$tmp" "$HOME/.local/bin/$name"
+	echo "$version" >"$versions/$name"
+}
+{{- with .linux.bins }}
+fetch bat {{ .bat }} "https://github.com/sharkdp/bat/releases/download/v{{ .bat }}/bat-v{{ .bat }}-x86_64-unknown-linux-musl.tar.gz" "bat-v{{ .bat }}-x86_64-unknown-linux-musl/bat"
+fetch comrak {{ .comrak }} "https://github.com/kivikakk/comrak/releases/download/v{{ .comrak }}/comrak-{{ .comrak }}-x86_64-unknown-linux-musl"
+fetch curlie {{ .curlie }} "https://github.com/rs/curlie/releases/download/v{{ .curlie }}/curlie_{{ .curlie }}_linux_amd64.tar.gz" curlie
+fetch duckdb {{ .duckdb }} "https://github.com/duckdb/duckdb/releases/download/v{{ .duckdb }}/duckdb_cli-linux-amd64.gz"
+fetch fd {{ .fd }} "https://github.com/sharkdp/fd/releases/download/v{{ .fd }}/fd-v{{ .fd }}-x86_64-unknown-linux-musl.tar.gz" "fd-v{{ .fd }}-x86_64-unknown-linux-musl/fd"
+fetch fzf {{ .fzf }} "https://github.com/junegunn/fzf/releases/download/v{{ .fzf }}/fzf-{{ .fzf }}-linux_amd64.tar.gz" fzf
+fetch gitleaks {{ .gitleaks }} "https://github.com/gitleaks/gitleaks/releases/download/v{{ .gitleaks }}/gitleaks_{{ .gitleaks }}_linux_x64.tar.gz" gitleaks
+fetch rg {{ .rg }} "https://github.com/BurntSushi/ripgrep/releases/download/{{ .rg }}/ripgrep-{{ .rg }}-x86_64-unknown-linux-musl.tar.gz" "ripgrep-{{ .rg }}-x86_64-unknown-linux-musl/rg"
+fetch sops {{ .sops }} "https://github.com/getsops/sops/releases/download/v{{ .sops }}/sops-v{{ .sops }}.linux.amd64"
+{{- end }}
 
 # Pi gets a Node of its own, so a system Node upgrade never breaks it.
 node_root="$HOME/.local/share/pi-node"

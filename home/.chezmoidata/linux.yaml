@@ -3,6 +3,9 @@ linux:
   node: "22.23.2"
   npm:
     - "@earendil-works/pi-coding-agent@1.0.0"
+    - "neovim@5.5.0"
+    - "typescript@7.0.2"
+    - "typescript-language-server@6.0.1"
   jdk: "21.0.12.1+1"
   maven: "3.9.9"
   ghidra:
@@ -10,3 +13,84 @@ linux:
     build: "20260817"
   ghidraMcp: "7.0.0-rc.1"
   engram: "1.20.0"
+
+  apt:
+    - clang-format
+    - docker-buildx
+    - docker-compose-v2
+    - docker.io
+    - ffmpeg
+    - graphviz
+    - libnss3-tools
+    - mkcert
+    - protobuf-compiler
+    - sshpass
+    - vlc
+    - wrk
+
+  # Apps Ubuntu does not package, from the vendor's own .deb.
+  debs:
+    - name: spotifast
+      version: "0.12.0"
+      url: "https://github.com/crmne/spotifast/releases/download/v0.12.0/spotifast_0.12.0_amd64.deb"
+    - name: keybase
+      url: "https://prerelease.keybase.io/keybase_amd64.deb"
+
+  bins:
+    bat: "0.26.1"
+    comrak: "0.56.0"
+    curlie: "1.8.2"
+    duckdb: "1.5.6"
+    fd: "10.5.0"
+    fzf: "0.74.4"
+    gitleaks: "8.30.1"
+    rg: "15.2.0"
+    sops: "3.13.3"
+
+  # The Mac's Go tools, less the Clerk-only ones.
+  goTools:
+    - github.com/rhysd/actionlint/cmd/actionlint
+    - github.com/klauspost/asmfmt/cmd/asmfmt
+    - golang.org/x/perf/cmd/benchstat
+    - github.com/codesenberg/bombardier
+    - golang.org/x/tools/cmd/callgraph
+    - gvisor.dev/gvisor/tools/checklocks/cmd/checklocks
+    - github.com/go-delve/delve/cmd/dlv
+    - github.com/kisielk/errcheck
+    - github.com/davidrjenni/reftools/cmd/fillstruct
+    - github.com/davidrjenni/reftools/cmd/fillswitch
+    - github.com/daixiang0/gci
+    - github.com/onsi/ginkgo/v2/ginkgo
+    - github.com/abice/go-enum
+    - github.com/rogpeppe/godef
+    - github.com/joho/godotenv/cmd/godotenv
+    - mvdan.cc/gofumpt
+    - golang.org/x/tools/cmd/goimports
+    - github.com/twpayne/go-jsonstruct/v3/cmd/gojsonstruct
+    - github.com/golangci/golangci-lint/v2/cmd/golangci-lint
+    - github.com/nametake/golangci-lint-langserver
+    - github.com/segmentio/golines
+    - github.com/fatih/gomodifytags
+    - github.com/abenz1267/gomvp
+    - golang.org/x/tools/cmd/gonew
+    - golang.org/x/tools/gopls
+    - golang.org/x/tools/cmd/gorename
+    - github.com/jstemmer/gotags
+    - github.com/cweill/gotests/gotests
+    - gotest.tools/gotestsum
+    - golang.org/x/vuln/cmd/govulncheck
+    - github.com/charmbracelet/gum
+    - github.com/koron/iferr
+    - github.com/josharian/impl
+    - github.com/tmc/json-to-struct
+    - go.uber.org/mock/mockgen
+    - github.com/fatih/motion
+    - github.com/DarthSim/overmind/v2
+    - github.com/maruel/panicparse/v2
+    - golang.org/x/pkgsite/cmd/pkgsite
+    - github.com/maruel/panicparse/v2/cmd/pp
+    - github.com/cespare/reflex
+    - github.com/mgechev/revive
+    - github.com/kyoh86/richgo
+    - honnef.co/go/tools/cmd/staticcheck
+    - github.com/maxclaus/waitforit

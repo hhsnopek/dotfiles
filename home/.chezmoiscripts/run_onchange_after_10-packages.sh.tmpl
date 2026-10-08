@@ -6,18 +6,42 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 brew bundle --no-upgrade --file="$HOME/.config/homebrew/Brewfile"
 {{ else if eq .chezmoi.os "linux" -}}
 #!/bin/bash
-# apt: {{ .apt | join " " }}; neovim {{ .neovim }}
+# neovim {{ .neovim }}
 set -euo pipefail
+can_sudo() { [ -t 0 ] || sudo -n true 2>/dev/null; }
 
 missing=()
-for pkg in {{ .apt | join " " }}; do
+for pkg in {{ concat .apt .linux.apt | join " " }}; do
 	dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q 'install ok installed' || missing+=("$pkg")
 done
-if ((${#missing[@]})); then
-	if [ -t 0 ] || sudo -n true 2>/dev/null; then
-		sudo apt-get install -y "${missing[@]}"
+debs=()
+{{- range .linux.debs }}
+have=$(dpkg-query -W -f='${Version}' {{ .name }} 2>/dev/null || true)
+if [ -z "$have" ]{{ if hasKey . "version" }} || [ "$have" != {{ .version | quote }} ]{{ end }}; then
+	debs+=({{ .url | quote }})
+fi
+{{- end }}
+if ((${#missing[@]} + ${#debs[@]})); then
+	if can_sudo; then
+		dir=$(mktemp -d)
+		trap 'rm -rf "$dir"' EXIT
+		files=()
+		for url in "${debs[@]}"; do
+			files+=("$dir/${url##*/}")
+			curl -fsSL -o "${files[-1]}" "$url"
+		done
+		sudo apt-get install -y "${missing[@]}" "${files[@]}"
 	else
-		echo "chezmoi: needs 'sudo apt-get install ${missing[*]}'" >&2
+		echo "chezmoi: run chezmoi apply in a terminal, to install ${missing[*]} ${debs[*]##*/}" >&2
+	fi
+fi
+
+if getent group docker >/dev/null && ! id -nG "$USER" | grep -qw docker; then
+	if can_sudo; then
+		sudo usermod -aG docker "$USER"
+		echo "chezmoi: log out and back in to use docker without sudo" >&2
+	else
+		echo "chezmoi: needs 'sudo usermod -aG docker $USER'" >&2
 	fi
 fi
 
