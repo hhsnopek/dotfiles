@@ -107,15 +107,29 @@ unalias brewski 2>/dev/null
 # plain `brew upgrade` skips. Every step runs even when an earlier one fails,
 # but brew catches ^C and exits 130, so any signal status stops the rest.
 function brewski {
-	local step status failed=()
-	for step in update upgrade cleanup doctor rust uv npm nvim; do
+	local step status failed=() keg old
+	for step in update upgrade{{ if .tailscaleSSH }} tailscale{{ end }} cleanup doctor rust uv npm nvim; do
 		case $step in
 		# --fetch-HEAD rebuilds formulae installed from a branch, like utc-clock.
 		upgrade) brew upgrade --greedy --yes --fetch-HEAD ;;
+{{- if .tailscaleSSH }}
+		# `sudo brew services` leaves the running keg's bin owned by root, so
+		# cleanup cannot delete it once an upgrade replaces it. Move the daemon
+		# onto the new keg, then remove the old ones as root.
+		tailscale)
+			keg=$(readlink -f "$(brew --prefix tailscale)")
+			old=$(find "$(brew --cellar tailscale)" -mindepth 1 -maxdepth 1 ! -path "$keg")
+			[[ -z $old ]] || { sudo brew services restart tailscale && xargs sudo rm -rf <<<"$old"; }
+			;;
+{{- end }}
+		# GNU coreutils and findutils lead PATH, and terraform stays unlinked so
+		# tfenv owns the command; doctor flags both, but both are deliberate.
+		doctor) brew doctor $(brew doctor --list-checks | grep -v -x -E 'check_for_non_prefixed_(coreutils|findutils)|check_for_unlinked_but_not_keg_only') ;;
 		rust) rustup update ;;
 		uv) uv tool upgrade --all ;;
 		npm) npm update --global ;;
-		nvim) nvim --headless '+lua vim.pack.update(nil, { force = true })' +qa ;;
+		# Headless Neovim exits 0 even when the config errors.
+		nvim) nvim --headless '+lua vim.pack.update(nil, { force = true })' '+if v:errmsg != "" | cquit | endif' +qa ;;
 		*) brew "$step" ;;
 		esac
 		status=$?
@@ -149,7 +163,7 @@ function brewski {
 		pi) pi update --extensions && pi update --models ;;
 		rust) rustup update ;;
 		uv) uv tool upgrade --all ;;
-		nvim) nvim --headless '+lua vim.pack.update(nil, { force = true })' +qa ;;
+		nvim) nvim --headless '+lua vim.pack.update(nil, { force = true })' '+if v:errmsg != "" | cquit | endif' +qa ;;
 		doctor) sudo apt-get check && dpkg --audit ;;
 		esac
 		status=$?
@@ -236,8 +250,9 @@ alias cla="clear; ls -A"
 
 {{- if .work }}
 
-# clerk/clerk_docker
-if command -v mkcert >/dev/null; then
+# clerk/clerk_docker. Node warns on every run when the CA file is missing, as
+# it is until `mkcert -install` runs.
+if command -v mkcert >/dev/null && [ -f "$(mkcert -CAROOT)/rootCA.pem" ]; then
 	NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem"
 	export NODE_EXTRA_CA_CERTS
 fi

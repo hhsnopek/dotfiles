@@ -10,6 +10,10 @@ if env.is_vscode() then
   return
 end
 
+-- A headless run quits before async parser installs finish, so it installs
+-- them synchronously instead.
+local headless = #vim.api.nvim_list_uis() == 0
+
 vim.pack.add({
   -- netrw enhancement
   { src = 'https://github.com/tpope/vim-vinegar' },
@@ -62,7 +66,7 @@ vim.api.nvim_create_autocmd('PackChanged', {
       vim.notify('Building telescope-fzf-native', vim.log.levels.INFO)
       vim.system({ 'make' }, { cwd = data.path }):wait()
     elseif name == 'nvim-treesitter' then
-      pcall(vim.cmd, 'TSUpdate')
+      pcall(vim.cmd, headless and 'TSUpdateSync' or 'TSUpdate')
     end
   end,
 })
@@ -75,7 +79,7 @@ require('nvim-treesitter.configs').setup({
     'gomod', 'gosum', 'gowork', 'gotmpl', 'json', 'regex', 'sql',
     'typescript', 'yaml', 'toml',
   },
-  sync_install = false,
+  sync_install = headless,
   auto_install = true,
   highlight = { enable = true },
   indent = { enable = true },

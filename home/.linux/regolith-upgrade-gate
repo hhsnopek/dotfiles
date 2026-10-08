@@ -21,3 +21,10 @@ if ! grep -qx "Prompt=$prompt" "$conf"; then
 	sed -i "s/^Prompt=.*/Prompt=$prompt/" "$conf"
 	logger -t regolith-upgrade-gate "release upgrades set to Prompt=$prompt (next LTS: ${next:-none})"
 fi
+
+# The login banner repeats a cached release offer for a day, even after the
+# switch to never.
+stamp=/var/lib/ubuntu-release-upgrader/release-upgrade-available
+if [ "$prompt" = never ] && [ -s "$stamp" ]; then
+	: >"$stamp"
+fi
