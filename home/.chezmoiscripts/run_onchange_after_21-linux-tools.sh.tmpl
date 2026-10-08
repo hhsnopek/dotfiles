@@ -70,6 +70,11 @@ for pkg in {{ .linux.npm | join " " }}; do
 	"$node_dir/bin/npm" ls --global --prefix "$node_dir" --depth=0 --parseable --long 2>/dev/null | grep -qF ":$pkg" ||
 		PATH="$node_dir/bin:$PATH" "$node_dir/bin/npm" install --global --prefix "$node_dir" "$pkg"
 done
+# Services and login shells search ~/.local/bin, not this Node's own folder,
+# so these links give them one Node and one pi without a system copy.
+for bin in node npm npx corepack pi; do
+	ln -sfn "$node_root/current/bin/$bin" "$HOME/.local/bin/$bin"
+done
 
 jdk="$HOME/opt/jdk21"
 if ! grep -qF 'SEMANTIC_VERSION="{{ .linux.jdk }}"' "$jdk/release" 2>/dev/null; then
