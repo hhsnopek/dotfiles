@@ -37,6 +37,7 @@ chezmoi init --apply --source ~/dev/hhsnopek/dotfiles hhsnopek/dotfiles
 | `05-ssh-key` (before files) | This machine's SSH key from 1Password, since git sends GitHub clones over SSH | Same, when chosen |
 | `10-packages` | `brew bundle` from `~/.config/homebrew/Brewfile` | apt packages, Neovim release under `~/.local`, neovim-remote |
 | `11-cleanshot` | CleanShot X pinned to the 4.x build the licence covers, from CleanShot's own server with a checksum | |
+| `12-utc-clock` | The UTC menu bar clock, built from its pinned source tag | |
 | `20-toolchains` | Node through `n`, npm globals, rustup and cross, Claude Code | |
 | `25-1password` | GPG key, f.lux location, database service files on work machines | GPG key, when chosen |
 | `26-github-key` | Adds this machine's SSH key to GitHub, opens the SSO page | Same |
