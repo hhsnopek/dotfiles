@@ -1,0 +1,39 @@
+wm.program.terminal: /usr/bin/ghostty
+! BEGIN statusline: markers let the block be replaced in place when reapplied
+wm.bar.status_command: i3status-rs ~/.config/regolith3/i3status-rust/config.toml
+wm.bar.separatorchar: ⋅
+wm.bar.background.color: #24364b
+wm.bar.statusline.color: #e4e4dd
+wm.bar.separator.color: #6194ba
+wm.bar.workspace.focused.background.color: #24364b
+wm.bar.workspace.focused.border.color: #65baf5
+wm.bar.workspace.focused.text.color: #e4e4dd
+wm.bar.workspace.active.background.color: #24364b
+wm.bar.workspace.active.border.color: #6194ba
+wm.bar.workspace.active.text.color: #e4e4dd
+wm.bar.workspace.inactive.background.color: #24364b
+wm.bar.workspace.inactive.border.color: #24364b
+wm.bar.workspace.inactive.text.color: #6194ba
+wm.bar.workspace.urgent.background.color: #e76d6d
+wm.bar.workspace.urgent.border.color: #e76d6d
+wm.bar.workspace.urgent.text.color: #24364b
+wm.workspace.01.name: 1
+wm.workspace.02.name: 2
+wm.workspace.03.name: 3
+wm.workspace.04.name: 4
+wm.workspace.05.name: 5
+wm.workspace.06.name: 6
+wm.workspace.07.name: 7
+wm.workspace.08.name: 8
+wm.workspace.09.name: 9
+wm.workspace.10.name: 10
+wm.workspace.11.name: 11
+wm.workspace.12.name: 12
+wm.workspace.13.name: 13
+wm.workspace.14.name: 14
+wm.workspace.15.name: 15
+wm.workspace.16.name: 16
+wm.workspace.17.name: 17
+wm.workspace.18.name: 18
+wm.workspace.19.name: 19
+! END statusline

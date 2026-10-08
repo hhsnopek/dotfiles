@@ -1,0 +1,63 @@
+[theme]
+theme = "semi-native"
+
+[theme.overrides]
+idle_fg = "#e4e4dd"
+info_fg = "#65baf5"
+good_fg = "#88c563"
+warning_fg = "#ecb534"
+critical_fg = "#e76d6d"
+
+# Regolith ships Nerd Fonts v2, which lacks the v3 codepoints that the
+# material-nf set expects, so icons map to the v2 nf-mdi range instead.
+# Escapes, not literal glyphs: part of that range is CJK compatibility
+# ideographs, which editors silently normalize into different characters.
+[icons]
+icons = "none"
+
+[icons.overrides]
+net_wireless = "\uFAA8"
+bat = ["\uF579", "\uF57A", "\uF57B", "\uF57C", "\uF57D", "\uF57E", "\uF57F", "\uF580", "\uF581", "\uF578"]
+bat_charging = "\uF583"
+
+[[block]]
+block = "custom"
+command = "tailscale status --json --peers=false 2>/dev/null | jq -e '.BackendState == \"Running\" and .Self.Online' >/dev/null && echo \uF023 || echo \uF09C"
+interval = 10
+format = " $text "
+
+# Pinned to the WiFi card: unpinned, a dropped connection falls back to lo or
+# tailscale0, which still count as up, so the disconnected icon never shows.
+[[block]]
+block = "net"
+device = "wlp2s0"
+format = " $icon rx $speed_down.eng(w:3, prefix:K, hide_unit:true) tx $speed_up.eng(w:3, prefix:K, hide_unit:true) "
+inactive_format = " \uFAA9 "
+missing_format = " \uFAA9 "
+
+[[block]]
+block = "cpu"
+interval = 5
+format = " cpu $utilization "
+
+[[block]]
+block = "battery"
+driver = "upower"
+device = "DisplayDevice"
+format = " $icon $percentage "
+charging_format = " $icon $percentage "
+full_format = " $icon $percentage "
+not_charging_format = " $icon $percentage "
+empty_format = " $icon $percentage "
+missing_format = ""
+
+[[block]]
+block = "time"
+interval = 10
+timezone = "UTC"
+format = " $timestamp.datetime(f:'%H:%M') UTC "
+
+[[block]]
+block = "time"
+interval = 10
+format = " $timestamp.datetime(f:'%m/%d/%Y %H:%M') "

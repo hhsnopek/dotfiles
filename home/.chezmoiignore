@@ -6,3 +6,6 @@
 .config/little-coder
 .config/tfenv
 {{ end }}
+{{ if eq .chezmoi.os "darwin" }}
+.config/regolith3
+{{ end }}
