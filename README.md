@@ -37,11 +37,11 @@ Answer yes to Personal and no to Private and Work, so nothing from Clerk lands o
 | Script | macOS | Linux |
 |---|---|---|
 | `05-ssh-key` (before files) | This machine's SSH key from 1Password, since git sends GitHub clones over SSH | Same, when chosen |
-| `10-packages` | `brew bundle` from `~/.config/homebrew/Brewfile` | apt packages, Neovim release under `~/.local`, neovim-remote |
+| `10-packages` | `brew bundle` from `~/.config/homebrew/Brewfile` | apt packages, Keybase from its .deb, neovim-remote |
 | `11-cleanshot` | CleanShot X pinned to the 4.x build the licence covers, from CleanShot's own server with a checksum | |
 | `12-utc-clock` | The UTC menu bar clock, built from its pinned source tag | |
 | `20-toolchains` | Node through `n`, npm globals, rustup and cross, Claude Code | |
-| `21-linux-tools` | | Go, Rust, uv, Pi on its own Node, JDK 21, Maven, Ghidra with ghidra-mcp, and Engram as a user service, each pinned and under `$HOME` |
+| `21-linux-tools` | | `linux-tools`, under `$HOME`: Go, Rust, uv, Neovim, pi and its npm tools, nine CLIs and Spotifast at their latest release; JDK 21, Maven, Ghidra with ghidra-mcp and Engram pinned |
 | `25-1password` | The Clerk GPG key on work machines, this machine's personal GPG key, f.lux location, database service files on work machines | This machine's personal GPG key |
 | `26-github-key` | Adds this machine's SSH key to GitHub, opens the SSO page | Same |
 | `27-wifi` | Wi-Fi networks tagged `wifi` in 1Password, as a profile to approve | |
@@ -57,7 +57,7 @@ Secrets come from the `dotfiles` vault in 1Password while the scripts run: this 
 
 Personal repos commit as my Gmail address, signed with a GPG key of the machine's own. Repos under `~/dev/clerk` commit as my Clerk address with the Clerk key, and Clerk's repos, keys and shell helpers only come with the Work answer.
 
-Caps Lock is Escape on macOS through [Karabiner-Elements], and on Ubuntu through GNOME's `caps:escape`. On Ubuntu, Regolith's look and status bar come from `~/.config/regolith3`: a click on the bar's UTC clock copies an RFC 3339 timestamp, and `brewski` runs apt and snap upkeep the way it runs Homebrew on the Macs.
+Caps Lock is Escape on macOS through [Karabiner-Elements], and on Ubuntu through GNOME's `caps:escape`. On Ubuntu, Regolith's look and status bar come from `~/.config/regolith3`: a click on the bar's UTC clock copies an RFC 3339 timestamp, and `brewski` updates apt, snaps, the `linux-tools` set and Neovim's plugins, as it updates Homebrew and Neovim's plugins on the Macs.
 
 Per-machine tweaks go in `~/.bashrc.local` and `~/.tmux.local.conf`, which this repo never touches.
 

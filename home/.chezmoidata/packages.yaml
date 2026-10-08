@@ -9,8 +9,6 @@ npm:
   - typescript
   - typescript-language-server
 
-neovim: "0.12.5"
-
 display:
   resolution: "1800x1169"
   hz: 120

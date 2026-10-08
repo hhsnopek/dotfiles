@@ -1,0 +1,188 @@
+#!/bin/bash
+# linux-tools installs the personal toolchains under $HOME, with no root
+# except for Spotifast's .deb. JDK 21, Maven, Ghidra, ghidra-mcp, Engram and
+# pi's Node stay at the versions the dotfiles pin; everything else installs
+# at its latest release, and `linux-tools --update` moves it up to the latest.
+set -euo pipefail
+update=false
+[ "${1:-}" = --update ] && update=true
+bin="$HOME/.local/bin"
+versions="$HOME/.local/state/dotfiles/versions"
+mkdir -p "$bin" "$HOME/opt" "$versions"
+
+# The newest release tag of a GitHub repo, read from where /releases/latest
+# redirects, which needs no API token. Empty when GitHub cannot be reached.
+latest() {
+	local url
+	url=$(curl -fsSLI -o /dev/null -w '%{url_effective}' "https://github.com/$1/releases/latest") || return 0
+	echo "${url##*/tag/}"
+}
+
+# True when an unpinned tool should be checked against its latest release.
+due() { $update || [ ! -e "$1" ]; }
+
+go_dir="$HOME/.local/go"
+if due "$go_dir/bin/go"; then
+	want=$(curl -fsSL 'https://go.dev/VERSION?m=text' | sed -n 1p)
+	if [ -n "$want" ] && [ "$("$go_dir/bin/go" env GOVERSION 2>/dev/null)" != "$want" ]; then
+		rm -rf "$go_dir"
+		mkdir -p "$go_dir"
+		curl -fsSL "https://go.dev/dl/$want.linux-amd64.tar.gz" | tar -xz -C "$go_dir" --strip-components=1
+	fi
+fi
+for module in {{ .linux.goTools | join " " }}; do
+	name=${module##*/}
+	if [[ $name == v[0-9]* ]]; then
+		name=${module%/*}
+		name=${name##*/}
+	fi
+	[ -x "$HOME/go/bin/$name" ] || GOPATH="$HOME/go" "$go_dir/bin/go" install "$module@latest"
+done
+
+if [ ! -x "$HOME/.cargo/bin/rustup" ]; then
+	curl --proto '=https' --tlsv1.2 -fsSL https://sh.rustup.rs | sh -s -- -y --no-modify-path
+fi
+
+if [ ! -x "$bin/uv" ]; then
+	curl -fsSL https://astral.sh/uv/install.sh | env UV_NO_MODIFY_PATH=1 sh
+fi
+[ -x "$bin/hf" ] || "$bin/uv" tool install huggingface_hub
+
+# Single-binary tools: name, GitHub repo, download URL, and the binary's path
+# inside the archive ("-" when the download is the binary). {v} is the
+# version. Each tool reports its version differently, so the installed
+# version is recorded beside it instead of parsed back out.
+while read -r name repo url member; do
+	due "$bin/$name" || continue
+	v=$(latest "$repo")
+	v=${v#v}
+	if [ -z "$v" ]; then
+		echo "linux-tools: no release found for $repo" >&2
+		continue
+	fi
+	[ -x "$bin/$name" ] && [ "$(cat "$versions/$name" 2>/dev/null)" = "$v" ] && continue
+	url=${url//\{v\}/$v}
+	member=${member//\{v\}/$v}
+	tmp=$(mktemp)
+	case $url in
+	*.tar.gz) curl -fsSL "$url" | tar -xzO "$member" >"$tmp" ;;
+	*.gz) curl -fsSL "$url" | gunzip >"$tmp" ;;
+	*) curl -fsSL -o "$tmp" "$url" ;;
+	esac
+	chmod 755 "$tmp"
+	mv "$tmp" "$bin/$name"
+	echo "$v" >"$versions/$name"
+done <<'TOOLS'
+bat sharkdp/bat https://github.com/sharkdp/bat/releases/download/v{v}/bat-v{v}-x86_64-unknown-linux-musl.tar.gz bat-v{v}-x86_64-unknown-linux-musl/bat
+comrak kivikakk/comrak https://github.com/kivikakk/comrak/releases/download/v{v}/comrak-{v}-x86_64-unknown-linux-musl -
+curlie rs/curlie https://github.com/rs/curlie/releases/download/v{v}/curlie_{v}_linux_amd64.tar.gz curlie
+duckdb duckdb/duckdb https://github.com/duckdb/duckdb/releases/download/v{v}/duckdb_cli-linux-amd64.gz -
+fd sharkdp/fd https://github.com/sharkdp/fd/releases/download/v{v}/fd-v{v}-x86_64-unknown-linux-musl.tar.gz fd-v{v}-x86_64-unknown-linux-musl/fd
+fzf junegunn/fzf https://github.com/junegunn/fzf/releases/download/v{v}/fzf-{v}-linux_amd64.tar.gz fzf
+gitleaks gitleaks/gitleaks https://github.com/gitleaks/gitleaks/releases/download/v{v}/gitleaks_{v}_linux_x64.tar.gz gitleaks
+rg BurntSushi/ripgrep https://github.com/BurntSushi/ripgrep/releases/download/{v}/ripgrep-{v}-x86_64-unknown-linux-musl.tar.gz ripgrep-{v}-x86_64-unknown-linux-musl/rg
+sops getsops/sops https://github.com/getsops/sops/releases/download/v{v}/sops-v{v}.linux.amd64 -
+TOOLS
+
+# Ubuntu 24.04 ships Neovim 0.9, too old for the vim.pack config. Each
+# release gets its own folder, so an update never pulls the runtime out from
+# under a Neovim that is still open.
+if due "$bin/nvim"; then
+	v=$(latest neovim/neovim)
+	v=${v#v}
+	if [ -n "$v" ] && [ "$(cat "$versions/nvim" 2>/dev/null)" != "$v" ]; then
+		dir="$HOME/.local/opt/nvim-$v"
+		if [ ! -x "$dir/bin/nvim" ]; then
+			mkdir -p "$dir"
+			curl -fsSL "https://github.com/neovim/neovim/releases/download/v$v/nvim-linux-x86_64.tar.gz" |
+				tar -xz -C "$dir" --strip-components=1
+		fi
+		ln -sfn "$dir/bin/nvim" "$bin/nvim"
+		echo "$v" >"$versions/nvim"
+	fi
+fi
+
+# Pi gets a Node of its own, so a system Node upgrade never breaks it.
+node_root="$HOME/.local/share/pi-node"
+node_dir="$node_root/node-v{{ .linux.node }}-linux-x64"
+if [ ! -x "$node_dir/bin/node" ]; then
+	mkdir -p "$node_root"
+	curl -fsSL "https://nodejs.org/dist/v{{ .linux.node }}/node-v{{ .linux.node }}-linux-x64.tar.xz" | tar -xJ -C "$node_root"
+fi
+ln -sfn "$node_dir" "$node_root/current"
+for pkg in {{ .linux.npm | join " " }}; do
+	if $update || ! "$node_dir/bin/npm" ls --global --prefix "$node_dir" "$pkg" >/dev/null 2>&1; then
+		PATH="$node_dir/bin:$PATH" "$node_dir/bin/npm" install --global --prefix "$node_dir" "$pkg@latest"
+	fi
+done
+# Services and login shells search ~/.local/bin, not this Node's own folder,
+# so these links give them one Node and one pi without a system copy.
+for name in node npm npx corepack pi; do
+	ln -sfn "$node_root/current/bin/$name" "$bin/$name"
+done
+
+jdk="$HOME/opt/jdk21"
+if ! grep -qF 'SEMANTIC_VERSION="{{ .linux.jdk }}"' "$jdk/release" 2>/dev/null; then
+	rm -rf "$jdk"
+	mkdir -p "$jdk"
+	curl -fsSL "https://api.adoptium.net/v3/binary/version/jdk-{{ .linux.jdk | urlquery }}/linux/x64/jdk/hotspot/normal/eclipse" |
+		tar -xz -C "$jdk" --strip-components=1
+fi
+
+maven="$HOME/opt/maven"
+if [ ! -f "$maven/lib/maven-core-{{ .linux.maven }}.jar" ]; then
+	rm -rf "$maven"
+	mkdir -p "$maven"
+	curl -fsSL "https://archive.apache.org/dist/maven/maven-3/{{ .linux.maven }}/binaries/apache-maven-{{ .linux.maven }}-bin.tar.gz" |
+		tar -xz -C "$maven" --strip-components=1
+fi
+
+ghidra="$HOME/opt/ghidra/ghidra_{{ .linux.ghidra.version }}_PUBLIC"
+if [ ! -x "$ghidra/ghidraRun" ]; then
+	zip=$(mktemp)
+	curl -fsSL -o "$zip" "https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_{{ .linux.ghidra.version }}_build/ghidra_{{ .linux.ghidra.version }}_PUBLIC_{{ .linux.ghidra.build }}.zip"
+	mkdir -p "$HOME/opt/ghidra"
+	unzip -q "$zip" -d "$HOME/opt/ghidra"
+	rm -f "$zip"
+fi
+
+# ghidra-mcp has no release built for this Ghidra, so its extension is built
+# here against the Ghidra above, and Pi runs its bridge with uv.
+mcp="$HOME/ghidra-mcp"
+if [ ! -d "$mcp" ]; then
+	git -c advice.detachedHead=false clone --quiet --depth 1 --branch "v{{ .linux.ghidraMcp }}" https://github.com/bethington/ghidra-mcp.git "$mcp"
+	(cd "$mcp" && JAVA_HOME="$jdk" ./gradlew --quiet buildExtension -PGHIDRA_INSTALL_DIR="$ghidra")
+	extensions="$HOME/.config/ghidra/ghidra_{{ .linux.ghidra.version }}_PUBLIC/Extensions"
+	mkdir -p "$extensions"
+	zips=("$mcp"/build/distributions/*.zip)
+	unzip -q -o "${zips[0]}" -d "$extensions"
+	"$bin/uv" sync --quiet --directory "$mcp"
+fi
+
+if ! "$bin/engram" --help 2>/dev/null | grep -qF "engram v{{ .linux.engram }} "; then
+	curl -fsSL "https://github.com/Gentleman-Programming/engram/releases/download/v{{ .linux.engram }}/engram_{{ .linux.engram }}_linux_amd64.tar.gz" |
+		tar -xz -C "$bin" engram
+fi
+if systemctl --user show-environment >/dev/null 2>&1; then
+	systemctl --user daemon-reload
+	systemctl --user enable --now engram.service
+fi
+
+# Spotifast ships a .deb, which only apt can install.
+have=$(dpkg-query -W -f='${Version}' spotifast 2>/dev/null || true)
+if $update || [ -z "$have" ]; then
+	v=$(latest crmne/spotifast)
+	v=${v#v}
+	if [ -n "$v" ] && [ "$have" != "$v" ]; then
+		if [ -t 0 ] || sudo -n true 2>/dev/null; then
+			dir=$(mktemp -d)
+			# apt reads local .deb files as its _apt user.
+			chmod 755 "$dir"
+			curl -fsSL -o "$dir/spotifast.deb" "https://github.com/crmne/spotifast/releases/download/v$v/spotifast_${v}_amd64.deb"
+			sudo apt-get install -y "$dir/spotifast.deb"
+			rm -rf "$dir"
+		else
+			echo "linux-tools: run it in a terminal to install Spotifast $v" >&2
+		fi
+	fi
+fi

@@ -10,6 +10,7 @@
 .config/environment.d
 .config/regolith3
 .config/systemd
+.local/bin/linux-tools
 .local/bin/utc-clock
 {{ end }}
 {{ if not .work }}

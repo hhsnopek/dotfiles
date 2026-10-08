@@ -108,12 +108,14 @@ unalias brewski 2>/dev/null
 # but brew catches ^C and exits 130, so any signal status stops the rest.
 function brewski {
 	local step status failed=()
-	for step in update upgrade cleanup doctor rust uv npm; do
+	for step in update upgrade cleanup doctor rust uv npm nvim; do
 		case $step in
-		upgrade) brew upgrade --greedy --yes ;;
+		# --fetch-HEAD rebuilds formulae installed from a branch, like utc-clock.
+		upgrade) brew upgrade --greedy --yes --fetch-HEAD ;;
 		rust) rustup update ;;
 		uv) uv tool upgrade --all ;;
 		npm) npm update --global ;;
+		nvim) nvim --headless '+lua vim.pack.update(nil, { force = true })' +qa ;;
 		*) brew "$step" ;;
 		esac
 		status=$?
@@ -131,21 +133,23 @@ export JAVA_HOME
 {{- if eq .chezmoi.os "linux" }}
 
 # The Mac's brewski for apt and snap. --with-new-pkgs takes upgrades that need
-# new dependencies but, unlike full-upgrade, never removes a package. pi itself
-# is pinned in the dotfiles, so only its extensions and model catalogs update
-# here. Every step runs even when an earlier one fails, but a signal status
-# stops the rest.
+# new dependencies but, unlike full-upgrade, never removes a package.
+# linux-tools moves Go, Neovim, pi and the other unpinned tools to their
+# latest release. Every step runs even when an earlier one fails, but a
+# signal status stops the rest.
 function brewski {
 	local step status failed=()
-	for step in update upgrade cleanup snap pi rust uv doctor; do
+	for step in update upgrade cleanup snap tools pi rust uv nvim doctor; do
 		case $step in
 		update) sudo apt-get update ;;
 		upgrade) sudo apt-get upgrade --with-new-pkgs -y ;;
 		cleanup) sudo apt-get autoremove --purge -y && sudo apt-get autoclean ;;
 		snap) sudo snap refresh ;;
+		tools) linux-tools --update ;;
 		pi) pi update --extensions && pi update --models ;;
 		rust) rustup update ;;
 		uv) uv tool upgrade --all ;;
+		nvim) nvim --headless '+lua vim.pack.update(nil, { force = true })' +qa ;;
 		doctor) sudo apt-get check && dpkg --audit ;;
 		esac
 		status=$?

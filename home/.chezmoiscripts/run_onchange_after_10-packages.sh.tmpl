@@ -6,7 +6,6 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 brew bundle --no-upgrade --file="$HOME/.config/homebrew/Brewfile"
 {{ else if eq .chezmoi.os "linux" -}}
 #!/bin/bash
-# neovim {{ .neovim }}
 set -euo pipefail
 can_sudo() { [ -t 0 ] || sudo -n true 2>/dev/null; }
 
@@ -47,17 +46,6 @@ if getent group docker >/dev/null && ! id -nG "$USER" | grep -qw docker; then
 		echo "chezmoi: needs 'sudo usermod -aG docker $USER'" >&2
 	fi
 fi
-
-# Ubuntu 24.04 ships Neovim 0.9, too old for the vim.pack config, so the
-# upstream release goes under ~/.local and needs no root.
-nvim_dir="$HOME/.local/opt/nvim-{{ .neovim }}"
-if [ ! -x "$nvim_dir/bin/nvim" ]; then
-	mkdir -p "$nvim_dir"
-	curl -fsSL "https://github.com/neovim/neovim/releases/download/v{{ .neovim }}/nvim-linux-x86_64.tar.gz" |
-		tar -xz -C "$nvim_dir" --strip-components=1
-fi
-mkdir -p "$HOME/.local/bin"
-ln -sfn "$nvim_dir/bin/nvim" "$HOME/.local/bin/nvim"
 
 uv=$(command -v uv || echo "$HOME/.local/bin/uv")
 if [ -x "$uv" ] && [ ! -x "$HOME/.local/bin/nvr" ]; then
