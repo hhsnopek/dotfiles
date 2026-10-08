@@ -1,0 +1,7 @@
+{{ if and .personal (lookPath "op") -}}
+#!/bin/bash
+# Clones the personal repositories; the list lives in 1Password so this public
+# repo never names them.
+set -euo pipefail
+op --account {{ .opAccount | quote }} read "op://dotfiles/Personal setup/notesPlain" | bash -euo pipefail
+{{ end -}}

@@ -10,3 +10,6 @@
 .config/regolith3
 .local/bin/utc-clock
 {{ end }}
+{{ if not .work }}
+.gitconfig.clerk
+{{ end }}

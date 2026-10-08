@@ -2,16 +2,20 @@
 {{- if eq .chezmoi.os "darwin" -}}
 {{-   $tailscaleSSH = promptBoolOnce . "tailscaleSSH" "Install the Tailscale CLI build so this Mac accepts Tailscale SSH (no GUI app)" false -}}
 {{- end -}}
-{{- $signCommits := promptBoolOnce . "signCommits" "Sign git commits with GPG key E2BCA15796515B33 (imported from 1Password)" true -}}
+{{- $signCommits := promptBoolOnce . "signCommits" "Sign git commits with GPG" true -}}
+{{- $personalSigningKey := promptStringOnce . "personalSigningKey" "GPG key ID that signs personal (Gmail) commits on this machine (blank for none)" "" -}}
 {{- $private := promptBoolOnce . "private" "Run the Private setup note from 1Password" false -}}
-{{- $work := promptBoolOnce . "work" "Run the private Work setup note from 1Password" false -}}
+{{- $personal := promptBoolOnce . "personal" "Run the Personal setup note from 1Password" false -}}
+{{- $work := promptBoolOnce . "work" "Run the private Work setup note from 1Password, and set up Clerk repos and keys" false -}}
 {{- $sshKeyItem := promptStringOnce . "sshKeyItem" "1Password item in the dotfiles vault holding this machine's SSH key (blank for none)" "" -}}
 sourceDir = {{ .chezmoi.workingTree | quote }}
 
 [data]
 tailscaleSSH = {{ $tailscaleSSH }}
 signCommits = {{ $signCommits }}
+personalSigningKey = {{ $personalSigningKey | quote }}
 private = {{ $private }}
+personal = {{ $personal }}
 work = {{ $work }}
 sshKeyItem = {{ $sshKeyItem | quote }}
 opAccount = "my.1password.com"

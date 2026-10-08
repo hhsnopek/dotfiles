@@ -184,11 +184,14 @@ alias cla="clear; ls -A"
 # alias pbcopy='xclip -selection clipboard'
 # alias pbpaste='xclip -selection clipboard -o'
 
+{{- if .work }}
+
 # clerk/clerk_docker
 if command -v mkcert >/dev/null; then
 	NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem"
 	export NODE_EXTRA_CA_CERTS
 fi
+{{- end }}
 
 # git
 alias glog="git tree"
@@ -202,10 +205,13 @@ alias gds='git diff --staged'
 alias gsu="git submodule update --init --recursive"
 alias grebm="co main; fp; git checkout -; git rebase main"
 
+{{- if .work }}
+
 # gcloud - https://cloud.google.com/sdk
 # --update-adc refreshes application-default credentials in the same sign-in.
 # For a sign-in from the phone, glogin-phone (~/.local/bin) pushes the link and a code form.
 alias glogin='gcloud auth login --update-adc'
+{{- end }}
 
 # docker - https://www.docker.com
 alias drm='docker rm $(docker ps -a -q)'
@@ -707,6 +713,8 @@ function retry() {
 alias ma="mobile-agent"
 alias mc="mobile-agent"
 
+{{- if .work }}
+
 # Interactive psql connect via fzf
 # Usage: clerkdb [filter]
 clerkdb() {
@@ -744,6 +752,7 @@ clk() {
   fi
   return $rc
 }
+{{- end }}
 
 # Per-machine settings that stay out of this repo.
 [ -f ~/.bashrc.local ] && . ~/.bashrc.local

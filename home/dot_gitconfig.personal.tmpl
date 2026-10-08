@@ -1,0 +1,8 @@
+[user]
+	email = hhsnopek@gmail.com
+{{- if .personalSigningKey }}
+	signingkey = {{ .personalSigningKey }}
+{{- else }}
+[commit]
+	gpgsign = false
+{{- end }}

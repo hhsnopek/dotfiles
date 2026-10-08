@@ -7,9 +7,11 @@
 
 [include]
   path = ~/.gitconfig.personal
+{{- if .work }}
 
 [includeIf "gitdir:~/dev/clerk/"]
   path = ~/.gitconfig.clerk
+{{- end }}
 
 [core]
 	excludesfile = ~/.gitignore
@@ -64,5 +66,7 @@
 
 [url "ssh://git@github.com/"]
 	insteadOf = https://github.com/
+{{- if .work }}
 [url "git@github.com:clerk/"]
 	insteadOf = https://github.com/clerk/
+{{- end }}
