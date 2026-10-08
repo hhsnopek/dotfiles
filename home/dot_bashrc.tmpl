@@ -108,12 +108,14 @@ unalias brewski 2>/dev/null
 # but brew catches ^C and exits 130, so any signal status stops the rest.
 function brewski {
 	local step status failed=()
-	for step in update upgrade cleanup doctor; do
-		if [[ $step == upgrade ]]; then
-			brew upgrade --greedy --yes
-		else
-			brew "$step"
-		fi
+	for step in update upgrade cleanup doctor rust uv npm; do
+		case $step in
+		upgrade) brew upgrade --greedy --yes ;;
+		rust) rustup update ;;
+		uv) uv tool upgrade --all ;;
+		npm) npm update --global ;;
+		*) brew "$step" ;;
+		esac
 		status=$?
 		((status > 128)) && return "$status"
 		((status != 0)) && failed+=("$step")
@@ -129,16 +131,21 @@ export JAVA_HOME
 {{- if eq .chezmoi.os "linux" }}
 
 # The Mac's brewski for apt and snap. --with-new-pkgs takes upgrades that need
-# new dependencies but, unlike full-upgrade, never removes a package. Every
-# step runs even when an earlier one fails, but a signal status stops the rest.
+# new dependencies but, unlike full-upgrade, never removes a package. pi itself
+# is pinned in the dotfiles, so only its extensions and model catalogs update
+# here. Every step runs even when an earlier one fails, but a signal status
+# stops the rest.
 function brewski {
 	local step status failed=()
-	for step in update upgrade cleanup snap doctor; do
+	for step in update upgrade cleanup snap pi rust uv doctor; do
 		case $step in
 		update) sudo apt-get update ;;
 		upgrade) sudo apt-get upgrade --with-new-pkgs -y ;;
 		cleanup) sudo apt-get autoremove --purge -y && sudo apt-get autoclean ;;
 		snap) sudo snap refresh ;;
+		pi) pi update --extensions && pi update --models ;;
+		rust) rustup update ;;
+		uv) uv tool upgrade --all ;;
 		doctor) sudo apt-get check && dpkg --audit ;;
 		esac
 		status=$?
