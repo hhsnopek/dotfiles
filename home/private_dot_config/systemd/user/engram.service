@@ -1,0 +1,13 @@
+[Unit]
+Description=Engram memory server shared by pi and other agents
+After=default.target
+
+[Service]
+# Update Engram deliberately rather than checking GitHub on every start.
+Environment=ENGRAM_NO_UPDATE_CHECK=1
+ExecStart=%h/.local/bin/engram serve
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

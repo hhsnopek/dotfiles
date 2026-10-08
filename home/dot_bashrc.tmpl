@@ -141,6 +141,21 @@ export PATH="$PATH:/usr/sbin"
 export PATH="$PATH:/usr/local/sbin"
 export PATH="$PATH:$HOME/.cargo/bin"
 export PATH="$PATH:$HOME/.yarn/bin"
+{{- if eq .chezmoi.os "linux" }}
+
+# Personal toolchains on the Linux laptop, all under $HOME.
+export PATH="$HOME/.local/go/bin:$HOME/.local/share/pi-node/current/bin:$PATH"
+export JAVA_HOME="$HOME/opt/jdk21"
+export PATH="$JAVA_HOME/bin:$HOME/opt/maven/bin:$PATH"
+# pi and its subagents start faster with a persistent V8 compile cache.
+export NODE_COMPILE_CACHE="$HOME/.cache/node-compile-cache"
+# 443 is free on this laptop; the Macs move mobile-agent off it for OrbStack.
+export MA_TAILSCALE_HTTPS_PORT=443
+# gentle-engram needs engram >= 2.0.0-rc.11 for instance-id, but the shared
+# engram.service runs 1.20.0. ENGRAM_URL makes it adopt that server and skip
+# the binary check. Drop this once Engram is upgraded.
+export ENGRAM_URL="http://127.0.0.1:7437"
+{{- end }}
 {{- if eq .chezmoi.os "darwin" }}
 export PATH="$PATH:/usr/local/opt/openjdk/bin"
 

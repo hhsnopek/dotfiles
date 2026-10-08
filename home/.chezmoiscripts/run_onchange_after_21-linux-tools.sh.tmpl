@@ -1,0 +1,82 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/bin/bash
+# Personal toolchains for the Linux laptop, all under $HOME so none needs
+# root: Go, Rust, uv, Pi, JDK 21, Maven, Ghidra, ghidra-mcp and Engram.
+set -euo pipefail
+mkdir -p "$HOME/.local/bin" "$HOME/opt"
+
+go_dir="$HOME/.local/go"
+if [ "$("$go_dir/bin/go" env GOVERSION 2>/dev/null)" != "go{{ .linux.go }}" ]; then
+	rm -rf "$go_dir"
+	mkdir -p "$go_dir"
+	curl -fsSL "https://go.dev/dl/go{{ .linux.go }}.linux-amd64.tar.gz" | tar -xz -C "$go_dir" --strip-components=1
+fi
+
+if [ ! -x "$HOME/.cargo/bin/rustup" ]; then
+	curl --proto '=https' --tlsv1.2 -fsSL https://sh.rustup.rs | sh -s -- -y --no-modify-path
+fi
+
+if [ ! -x "$HOME/.local/bin/uv" ]; then
+	curl -fsSL https://astral.sh/uv/install.sh | env UV_NO_MODIFY_PATH=1 sh
+fi
+
+# Pi gets a Node of its own, so a system Node upgrade never breaks it.
+node_root="$HOME/.local/share/pi-node"
+node_dir="$node_root/node-v{{ .linux.node }}-linux-x64"
+if [ ! -x "$node_dir/bin/node" ]; then
+	mkdir -p "$node_root"
+	curl -fsSL "https://nodejs.org/dist/v{{ .linux.node }}/node-v{{ .linux.node }}-linux-x64.tar.xz" | tar -xJ -C "$node_root"
+fi
+ln -sfn "$node_dir" "$node_root/current"
+for pkg in {{ .linux.npm | join " " }}; do
+	"$node_dir/bin/npm" ls --global --prefix "$node_dir" --depth=0 --parseable --long 2>/dev/null | grep -qF ":$pkg" ||
+		PATH="$node_dir/bin:$PATH" "$node_dir/bin/npm" install --global --prefix "$node_dir" "$pkg"
+done
+
+jdk="$HOME/opt/jdk21"
+if ! grep -qF 'SEMANTIC_VERSION="{{ .linux.jdk }}"' "$jdk/release" 2>/dev/null; then
+	rm -rf "$jdk"
+	mkdir -p "$jdk"
+	curl -fsSL "https://api.adoptium.net/v3/binary/version/jdk-{{ .linux.jdk | urlquery }}/linux/x64/jdk/hotspot/normal/eclipse" |
+		tar -xz -C "$jdk" --strip-components=1
+fi
+
+maven="$HOME/opt/maven"
+if [ ! -f "$maven/lib/maven-core-{{ .linux.maven }}.jar" ]; then
+	rm -rf "$maven"
+	mkdir -p "$maven"
+	curl -fsSL "https://archive.apache.org/dist/maven/maven-3/{{ .linux.maven }}/binaries/apache-maven-{{ .linux.maven }}-bin.tar.gz" |
+		tar -xz -C "$maven" --strip-components=1
+fi
+
+ghidra="$HOME/opt/ghidra/ghidra_{{ .linux.ghidra.version }}_PUBLIC"
+if [ ! -x "$ghidra/ghidraRun" ]; then
+	zip=$(mktemp)
+	curl -fsSL -o "$zip" "https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_{{ .linux.ghidra.version }}_build/ghidra_{{ .linux.ghidra.version }}_PUBLIC_{{ .linux.ghidra.build }}.zip"
+	mkdir -p "$HOME/opt/ghidra"
+	unzip -q "$zip" -d "$HOME/opt/ghidra"
+	rm -f "$zip"
+fi
+
+# ghidra-mcp has no release built for this Ghidra, so its extension is built
+# here against the Ghidra above, and Pi runs its bridge with uv.
+mcp="$HOME/ghidra-mcp"
+if [ ! -d "$mcp" ]; then
+	git -c advice.detachedHead=false clone --quiet --depth 1 --branch "v{{ .linux.ghidraMcp }}" https://github.com/bethington/ghidra-mcp.git "$mcp"
+	(cd "$mcp" && JAVA_HOME="$jdk" ./gradlew --quiet buildExtension -PGHIDRA_INSTALL_DIR="$ghidra")
+	extensions="$HOME/.config/ghidra/ghidra_{{ .linux.ghidra.version }}_PUBLIC/Extensions"
+	mkdir -p "$extensions"
+	zips=("$mcp"/build/distributions/*.zip)
+	unzip -q -o "${zips[0]}" -d "$extensions"
+	"$HOME/.local/bin/uv" sync --quiet --directory "$mcp"
+fi
+
+if ! "$HOME/.local/bin/engram" --help 2>/dev/null | grep -qF "engram v{{ .linux.engram }} "; then
+	curl -fsSL "https://github.com/Gentleman-Programming/engram/releases/download/v{{ .linux.engram }}/engram_{{ .linux.engram }}_linux_amd64.tar.gz" |
+		tar -xz -C "$HOME/.local/bin" engram
+fi
+if systemctl --user show-environment >/dev/null 2>&1; then
+	systemctl --user daemon-reload
+	systemctl --user enable --now engram.service
+fi
+{{ end -}}

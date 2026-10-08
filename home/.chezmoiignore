@@ -8,6 +8,7 @@
 {{ end }}
 {{ if eq .chezmoi.os "darwin" }}
 .config/regolith3
+.config/systemd
 .local/bin/utc-clock
 {{ end }}
 {{ if not .work }}
