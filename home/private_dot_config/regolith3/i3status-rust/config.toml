@@ -52,10 +52,19 @@ empty_format = " $icon $percentage "
 missing_format = ""
 
 [[block]]
-block = "time"
+block = "custom"
+command = "$HOME/.local/bin/utc-clock"
+json = true
 interval = 10
-timezone = "UTC"
-format = " $timestamp.datetime(f:'%H:%M') UTC "
+signal = 1
+format = " $text.pango-str() "
+
+# sync, so the refresh sees the copy's marker file.
+[[block.click]]
+button = "left"
+cmd = "$HOME/.local/bin/utc-clock copy"
+sync = true
+update = true
 
 [[block]]
 block = "time"

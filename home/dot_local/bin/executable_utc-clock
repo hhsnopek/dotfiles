@@ -1,0 +1,31 @@
+#!/bin/bash
+# utc-clock prints the Regolith bar's UTC block as i3status-rs JSON.
+# `utc-clock copy` copies the time as RFC 3339 with microseconds and shows a
+# green clipboard in place of the clock icon for a second; both icons are the
+# same width, so the bar never shifts.
+set -euo pipefail
+copied="${XDG_RUNTIME_DIR:-/tmp}/utc-clock.copied"
+
+if [ "${1:-}" = copy ]; then
+	stamp=$(date -u +%Y-%m-%dT%H:%M:%S.%6NZ)
+	# Both stay in the background to serve the clipboard; without the
+	# redirect they hold the caller's output open and it never sees EOF.
+	if [ -n "${WAYLAND_DISPLAY:-}" ]; then
+		printf %s "$stamp" | wl-copy >/dev/null 2>&1
+	else
+		printf %s "$stamp" | xclip -selection clipboard >/dev/null 2>&1
+	fi
+	touch "$copied"
+	# SIGRTMIN+1 makes i3status-rs rerun this block, which restores the clock.
+	# shellcheck disable=SC2016 # $1 is expanded by the inner sh
+	setsid -f sh -c 'sleep 1; rm -f "$1"; pkill --signal RTMIN+1 -x i3status-rs' sh "$copied" >/dev/null 2>&1
+	exit 0
+fi
+
+# Nerd Fonts v2 Material Design icons: clock outline and clipboard outline.
+time=$(date -u +%H:%M)
+if [ -e "$copied" ]; then
+	printf '{"text":"<span foreground=\x27#88c563\x27>\\uF64C</span> %s UTC"}\n' "$time"
+else
+	printf '{"text":"\\uF64F %s UTC"}\n' "$time"
+fi
