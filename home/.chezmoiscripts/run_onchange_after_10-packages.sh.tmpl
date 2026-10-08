@@ -25,6 +25,9 @@ if ((${#missing[@]} + ${#debs[@]})); then
 	if can_sudo; then
 		dir=$(mktemp -d)
 		trap 'rm -rf "$dir"' EXIT
+		# apt reads local .deb files as its _apt user, which a private
+		# mktemp folder shuts out.
+		chmod 755 "$dir"
 		files=()
 		for url in "${debs[@]}"; do
 			files+=("$dir/${url##*/}")
