@@ -13,8 +13,19 @@ if [ ! -f "$ini" ]; then
 	exit 1
 fi
 
-# The profile this Firefox install opens, from its [Install...] section.
+# The profile this Firefox install opens, from its [Install...] section. The
+# snap writes no such section and marks its default with Default=1 instead.
 profile=$(awk -F= '/^\[Install/ {install = 1; next} /^\[/ {install = 0} install && $1 == "Default" {print $2; exit}' "$ini")
+if [ -z "$profile" ]; then
+	profile=$(awk -F= '
+		/^\[/ {
+			if (def && path != "") { print path; found = 1; exit }
+			section = ($0 ~ /^\[Profile/); path = ""; def = 0; next
+		}
+		section && $1 == "Path" { path = $2 }
+		section && $1 == "Default" && $2 == "1" { def = 1 }
+		END { if (!found && def && path != "") print path }' "$ini")
+fi
 if [ -z "$profile" ] || [ ! -d "$root/$profile" ]; then
 	echo "chezmoi: no default Firefox profile in $ini" >&2
 	exit 1
