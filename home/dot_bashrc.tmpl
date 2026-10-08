@@ -260,8 +260,15 @@ alias drmi='docker rmi $(docker images -q)'
 export FIGNORE="$FIGNORE:DS_Store"
 
 # fzf - https://github.com/junegunn/fzf
-# requires: pt - https://github.com/monochromegane/the_platinum_searcher
-[ -f ~/.fzf.bash ] && source ~/.fzf.bash
+# `fzf --bash` adds CTRL-R, CTRL-T, ALT-C and ** completion. fd keeps
+# .gitignored files out of the lists, and bat previews files.
+if command -v fzf >/dev/null; then
+	eval "$(fzf --bash)"
+	export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
+	export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+	export FZF_ALT_C_COMMAND='fd --type d --hidden --exclude .git'
+	export FZF_CTRL_T_OPTS="--preview 'bat --color=always --style=numbers --line-range=:300 {}'"
+fi
 [ -f ~/dev/fzf-git.sh/fzf-git.sh ] && source ~/dev/fzf-git.sh/fzf-git.sh
 
 # completions
