@@ -1,37 +1,36 @@
-# dotfiles
+# Dotfiles . . .
+> Here lies all my dotfiles that I use on all my machines, cheers ☕️
 
-Shell, editor, terminal and app setup for every machine I use: Macs and an Ubuntu laptop. Managed with [chezmoi](https://www.chezmoi.io); the files under `home/` map onto `$HOME`.
+Macs and an Ubuntu laptop, all managed with [chezmoi]. No secrets live here: anything private comes out of [1Password] at setup time, and [gitleaks] stops any commit or push that holds one.
 
-No secrets live here. Anything private is read from 1Password or created per machine, and gitleaks blocks commits and pushes that contain one.
+## Getting Started
+*NOTE*: Run the bootstrap in a terminal on the Mac itself. It asks for your password once, and the steps that need the desktop wait for the next local run.
 
-## New Mac
+### Install Requirements
+- macOS, or Ubuntu with [chezmoi]
 
-1. Clone this repo and run the bootstrap. macOS offers to install its developer tools the first time `git` runs; accept, then rerun the clone.
+That's it. The bootstrap installs [Homebrew], [1Password], [chezmoi] and [gh] when they're missing.
 
-   ```bash
-   git clone https://github.com/hhsnopek/dotfiles.git ~/dev/hhsnopek/dotfiles
-   ~/dev/hhsnopek/dotfiles/bootstrap.sh
-   ```
+### Installation
+```bash
+git clone https://github.com/hhsnopek/dotfiles.git ~/dev/hhsnopek/dotfiles
+~/dev/hhsnopek/dotfiles/bootstrap.sh
+```
 
-   The bootstrap asks for your password once, installs Homebrew, 1Password, chezmoi and gh when missing, waits for you to sign in to 1Password and turn on Settings → Developer → Integrate with 1Password CLI, signs gh in to GitHub, then applies this repo. chezmoi asks about the Tailscale build, commit signing, the Private and Work setup notes, and which SSH key item belongs to this machine.
+On a fresh Mac, `git` first offers to install Apple's developer tools; accept, then rerun the clone. Partway through, the bootstrap waits for you to sign in to 1Password and turn on Settings → Developer → Integrate with 1Password CLI, then signs gh in to GitHub. Then chezmoi asks about the Tailscale build, commit signing, the Private and Work setup notes, and this machine's SSH key. Rerun the bootstrap whenever something was skipped; every step checks before it acts.
 
-   Every step checks before it acts, so rerun the bootstrap whenever something was skipped or failed. Steps that need `sudo` or the desktop fail on purpose over SSH and finish on the next local run.
-
-2. Approve what macOS asks for: Karabiner-Elements' driver and Input Monitoring, the "Wi-Fi networks" profile under Device Management, and Firefox as the default browser. On GitHub, authorize the new SSH key for SSO, then rerun the bootstrap.
-3. Sign in to the apps that need it: Slack, Tailscale, gcloud (`gcloud auth login --update-adc`), Claude Code and its `/mcp` servers, and Firefox Sync, then tick Enable synchronization in Multi-Account Containers' options. Activate CleanShot with the licence key from the `CleanShot X licence` item in 1Password.
-4. Log out and back in, so the keyboard and shortcut settings take effect.
-
-Secrets come from the `dotfiles` vault in 1Password while the scripts run: this machine's SSH key, the GPG signing key, the Wi-Fi passwords, the f.lux location, the database service files on work machines, and the Private and Work setup notes. Nothing private is written into this repo.
-
-## Ubuntu
-
+On Ubuntu:
 ```bash
 sudo snap install chezmoi --classic
 chezmoi init --apply --source ~/dev/hhsnopek/dotfiles hhsnopek/dotfiles
 ```
 
-## What runs
+### After the First Run
+1. Approve what macOS asks for: Karabiner-Elements' driver and Input Monitoring, the "Wi-Fi networks" profile under Device Management, and Firefox as the default browser. Authorize the new SSH key for SSO on GitHub, then rerun the bootstrap.
+2. Sign in to Slack, Tailscale, gcloud (`gcloud auth login --update-adc`), Claude Code and its `/mcp` servers, and Firefox Sync, then tick Enable synchronization in Multi-Account Containers. Activate CleanShot with the `CleanShot X licence` item in 1Password.
+3. Log out and back in, so the keyboard and shortcut settings take effect.
 
+## What's Inside
 | Script | macOS | Linux |
 |---|---|---|
 | `05-ssh-key` (before files) | This machine's SSH key from 1Password, since git sends GitHub clones over SSH | Same, when chosen |
@@ -49,6 +48,13 @@ chezmoi init --apply --source ~/dev/hhsnopek/dotfiles hhsnopek/dotfiles
 | `40-system` | Homebrew bash as the login shell, optional Tailscale SSH | Caps Lock as Escape |
 | `50-repos` | Commit hook, fzf-git.sh | Commit hook, fzf-git.sh |
 
-Caps Lock is Escape on macOS through Karabiner-Elements.
+Secrets come from the `dotfiles` vault in 1Password while the scripts run: this machine's SSH key, the GPG signing key, the Wi-Fi passwords, the f.lux location, the database service files on work machines, and the Private and Work setup notes.
 
-Per-machine settings go in `~/.bashrc.local` and `~/.tmux.local.conf`, which this repo never touches.
+Caps Lock is Escape on macOS through [Karabiner-Elements]. Per-machine tweaks go in `~/.bashrc.local` and `~/.tmux.local.conf`, which this repo never touches.
+
+[chezmoi]: https://www.chezmoi.io
+[1Password]: https://1password.com
+[gitleaks]: https://github.com/gitleaks/gitleaks
+[Homebrew]: https://brew.sh
+[gh]: https://cli.github.com
+[Karabiner-Elements]: https://karabiner-elements.pqrs.org
