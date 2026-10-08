@@ -110,9 +110,11 @@ if [ ! -x "$node_dir/bin/node" ]; then
 	curl -fsSL "https://nodejs.org/dist/v{{ .linux.node }}/node-v{{ .linux.node }}-linux-x64.tar.xz" | tar -xJ -C "$node_root"
 fi
 ln -sfn "$node_dir" "$node_root/current"
+# npm starts through `env node`, so this Node has to come first on PATH.
+export PATH="$node_dir/bin:$PATH"
 for pkg in {{ .linux.npm | join " " }}; do
-	if $update || ! "$node_dir/bin/npm" ls --global --prefix "$node_dir" "$pkg" >/dev/null 2>&1; then
-		PATH="$node_dir/bin:$PATH" "$node_dir/bin/npm" install --global --prefix "$node_dir" "$pkg@latest"
+	if $update || ! npm ls --global --prefix "$node_dir" "$pkg" >/dev/null 2>&1; then
+		npm install --global --prefix "$node_dir" "$pkg@latest"
 	fi
 done
 # Services and login shells search ~/.local/bin, not this Node's own folder,
