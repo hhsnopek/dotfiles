@@ -1,6 +1,7 @@
 tap "clerk/stable", trusted: true
 tap "crmne/tap", trusted: { casks: ["fastpotify"] }
 tap "hashicorp/tap", trusted: true
+tap "hhsnopek/tap", trusted: true
 tap "oven-sh/bun", trusted: true
 tap "planetscale/tap", trusted: true
 
@@ -73,6 +74,7 @@ brew "wrk"
 brew "yq"
 brew "clerk/stable/clerk"
 brew "hashicorp/tap/terraform", link: false
+brew "hhsnopek/tap/utc-clock", args: ["HEAD"], restart_service: :changed
 brew "oven-sh/bun/bun"
 brew "planetscale/tap/pscale"
 

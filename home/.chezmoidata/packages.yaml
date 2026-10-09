@@ -17,8 +17,6 @@ cleanshot:
   version: "4.8.11"
   sha256: "298afb3d085ee6343dae954ba2a7429bd613e6ad9e942c8f79008688ceb11a81"
 
-utcClock: "1.0.0"
-
 apt:
   - git-lfs
   - htop
@@ -43,4 +41,3 @@ loginItems:
   - Spotifast
   - TopNotch
   - Tuple
-  - UTC Clock
