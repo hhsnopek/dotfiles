@@ -37,7 +37,7 @@ Answer yes to Personal and no to Private and Work, so nothing from Clerk lands o
 | Script | macOS | Linux |
 |---|---|---|
 | `05-ssh-key` (before files) | This machine's SSH key from 1Password, since git sends GitHub clones over SSH | Same, when chosen |
-| `10-packages` | `brew bundle` from `~/.config/homebrew/Brewfile`, which also starts the UTC menu bar clock's login service | apt packages, Keybase from its .deb, neovim-remote |
+| `10-packages` | `brew bundle` from `~/.config/homebrew/Brewfile`, which also starts the login services for the UTC menu bar clock and tailtray | apt packages, Keybase from its .deb, neovim-remote |
 | `11-cleanshot` | CleanShot X pinned to the 4.x build the licence covers, from CleanShot's own server with a checksum | |
 | `20-toolchains` | Node through `n`, npm globals, rustup and cross, Claude Code | |
 | `21-linux-tools` | | `linux-tools`, under `$HOME`: Go, Rust, uv, Neovim, pi and its npm tools, nine CLIs and Spotifast at their latest release; JDK 21, Maven, Ghidra with ghidra-mcp and Engram pinned |
