@@ -1,0 +1,4 @@
+# i3bar only hosts XEmbed tray icons, so snixembed bridges StatusNotifierItem
+# apps such as tailtray onto it.
+exec --no-startup-id {{ .chezmoi.homeDir }}/.local/bin/snixembed
+exec --no-startup-id {{ .chezmoi.homeDir }}/.local/bin/tailtray
