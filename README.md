@@ -40,7 +40,7 @@ Answer yes to Personal and no to Private and Work, so nothing from Clerk lands o
 | `10-packages` | `brew bundle` from `~/.config/homebrew/Brewfile`, which also starts the login services for the UTC menu bar clock and tailtray | apt packages, Keybase from its .deb, neovim-remote |
 | `11-cleanshot` | CleanShot X pinned to the 4.x build the licence covers, from CleanShot's own server with a checksum | |
 | `20-toolchains` | Node through `n`, npm globals, rustup and cross, Claude Code | |
-| `21-linux-tools` | | `linux-tools`, under `$HOME`: Go, Rust, uv, Neovim, pi and its npm tools, nine CLIs and Spotifast at their latest release; JDK 21, Maven, Ghidra with ghidra-mcp and Engram pinned |
+| `21-linux-tools` | | `linux-tools`, under `$HOME`: Go, Rust, uv, Neovim, pi and its npm tools, the Go tools with tailtray, nine CLIs and Spotifast at their latest release; JDK 21, Maven, Ghidra with ghidra-mcp, Engram and snixembed pinned |
 | `25-1password` | The Clerk GPG key on work machines, this machine's personal GPG key, f.lux location, database service files on work machines | This machine's personal GPG key |
 | `26-github-key` | Adds this machine's SSH key to GitHub, opens the SSO page | Same |
 | `27-wifi` | Wi-Fi networks tagged `wifi` in 1Password, as a profile to approve | |

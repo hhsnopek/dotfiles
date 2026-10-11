@@ -1,8 +1,9 @@
 #!/bin/bash
 # linux-tools installs the personal toolchains under $HOME, with no root
-# except for Spotifast's .deb. JDK 21, Maven, Ghidra, ghidra-mcp, Engram and
-# pi's Node stay at the versions the dotfiles pin; everything else installs
-# at its latest release, and `linux-tools --update` moves it up to the latest.
+# except for Spotifast's .deb. JDK 21, Maven, Ghidra, ghidra-mcp, Engram,
+# snixembed and pi's Node stay at the versions the dotfiles pin; everything
+# else installs at its latest release, and `linux-tools --update` moves it up
+# to the latest.
 set -euo pipefail
 update=false
 [ "${1:-}" = --update ] && update=true
@@ -36,7 +37,9 @@ for module in {{ .linux.goTools | join " " }}; do
 		name=${module%/*}
 		name=${name##*/}
 	fi
-	[ -x "$HOME/go/bin/$name" ] || GOPATH="$HOME/go" "$go_dir/bin/go" install "$module@latest"
+	if due "$HOME/go/bin/$name"; then
+		GOPATH="$HOME/go" "$go_dir/bin/go" install "$module@latest"
+	fi
 done
 
 if [ ! -x "$HOME/.cargo/bin/rustup" ]; then
@@ -168,6 +171,20 @@ fi
 if systemctl --user show-environment >/dev/null 2>&1; then
 	systemctl --user daemon-reload
 	systemctl --user enable --now engram.service
+fi
+
+# Ubuntu does not package snixembed, which carries tray apps onto i3bar, so it
+# is built from its tag against the Vala and GTK packages in the apt list.
+if [ ! -x "$bin/snixembed" ] || [ "$(cat "$versions/snixembed" 2>/dev/null)" != "{{ .linux.snixembed }}" ]; then
+	src=$(mktemp -d)
+	git -c advice.detachedHead=false clone --quiet --depth 1 --branch "{{ .linux.snixembed }}" https://git.sr.ht/~steef/snixembed "$src"
+	if ! make -s -C "$src" >"$src/build.log" 2>&1; then
+		cat "$src/build.log" >&2
+		exit 1
+	fi
+	install -m 755 "$src/snixembed" "$bin/snixembed"
+	rm -rf "$src"
+	echo "{{ .linux.snixembed }}" >"$versions/snixembed"
 fi
 
 # Spotifast ships a .deb, which only apt can install.

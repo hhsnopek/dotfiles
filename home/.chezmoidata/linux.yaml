@@ -1,7 +1,8 @@
 linux:
   # Pinned for a reason: pi's own Node, JDK 21 for Ghidra, ghidra-mcp built
-  # against that Ghidra, and Engram for the ENGRAM_URL workaround. Everything
-  # else in linux-tools tracks its latest release.
+  # against that Ghidra, Engram for the ENGRAM_URL workaround, and snixembed,
+  # whose sourcehut home has no GitHub release to follow. Everything else in
+  # linux-tools tracks its latest release.
   node: "22.23.2"
   npm:
     - "@earendil-works/pi-coding-agent"
@@ -15,18 +16,24 @@ linux:
     build: "20260817"
   ghidraMcp: "7.0.0-rc.1"
   engram: "1.20.0"
+  snixembed: "0.3.3"
 
   apt:
+    - build-essential
     - clang-format
     - docker-buildx
     - docker-compose-v2
     - docker.io
     - ffmpeg
     - graphviz
+    - libdbusmenu-gtk3-dev
+    - libgtk-3-dev
     - libnss3-tools
     - mkcert
+    - pkg-config
     - protobuf-compiler
     - sshpass
+    - valac
     - vlc
     - wrk
 
@@ -35,7 +42,8 @@ linux:
     - name: keybase
       url: "https://prerelease.keybase.io/keybase_amd64.deb"
 
-  # The Mac's Go tools, less the Clerk-only ones.
+  # The Mac's Go tools, less the Clerk-only ones, plus tailtray, which the Mac
+  # builds from hhsnopek/tap.
   goTools:
     - github.com/rhysd/actionlint/cmd/actionlint
     - github.com/klauspost/asmfmt/cmd/asmfmt
@@ -81,4 +89,5 @@ linux:
     - github.com/mgechev/revive
     - github.com/kyoh86/richgo
     - honnef.co/go/tools/cmd/staticcheck
+    - github.com/hhsnopek/tailtray
     - github.com/maxclaus/waitforit
