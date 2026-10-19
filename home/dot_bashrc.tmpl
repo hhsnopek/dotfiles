@@ -60,8 +60,57 @@ unset _gnu
 # mean the 5.x installed here rather than the 3.2 Apple ships.
 prepend_path "${HOMEBREW_PREFIX}/sbin"
 prepend_path "${HOMEBREW_PREFIX}/bin"
+prepend_path "${HOMEBREW_PREFIX}/opt/libpq/bin"
 export PATH MANPATH
 {{- end }}
+
+export PATH="$HOME/.local/bin:$PATH"
+
+# opentofu
+export TERRAFORM_BINARY_NAME=tofu
+
+# bin
+export PATH="$PATH:/bin"
+export PATH="$PATH:/usr/bin"
+export PATH="$PATH:/usr/local/bin"
+export PATH="$PATH:/$HOME/.local/bin"
+export PATH="$PATH:/sbin"
+export PATH="$PATH:/usr/sbin"
+export PATH="$PATH:/usr/local/sbin"
+export PATH="$PATH:$HOME/.cargo/bin"
+export PATH="$PATH:$HOME/.yarn/bin"
+{{- if eq .chezmoi.os "linux" }}
+
+# Personal toolchains on the Linux laptop, all under $HOME.
+export PATH="$HOME/.local/go/bin:$HOME/.local/share/pi-node/current/bin:$PATH"
+export JAVA_HOME="$HOME/opt/jdk21"
+export PATH="$JAVA_HOME/bin:$HOME/opt/maven/bin:$PATH"
+# pi and its subagents start faster with a persistent V8 compile cache.
+export NODE_COMPILE_CACHE="$HOME/.cache/node-compile-cache"
+# 443 is free on this laptop; the Macs move mobile-agent off it for OrbStack.
+export MA_TAILSCALE_HTTPS_PORT=443
+# gentle-engram needs engram >= 2.0.0-rc.11 for instance-id, but the shared
+# engram.service runs 1.20.0. ENGRAM_URL makes it adopt that server and skip
+# the binary check. Drop this once Engram is upgraded.
+export ENGRAM_URL="http://127.0.0.1:7437"
+{{- end }}
+{{- if eq .chezmoi.os "darwin" }}
+export PATH="$PATH:/usr/local/opt/openjdk/bin"
+
+# python
+export PATH="$PATH:$HOME/Library/Python/3.9/bin"
+
+# node - https://nodejs.org
+export N_PREFIX="$HOME/n"; [[ :$PATH: == *":$N_PREFIX/bin:"* ]] || PATH+=":$N_PREFIX/bin"
+{{- end }}
+
+# go - https://golang.org/
+export GOPATH="$HOME/go"
+if command -v go >/dev/null; then
+	GOBIN="$(go env GOBIN)"
+	export GOBIN
+fi
+export PATH="$PATH:$GOPATH/bin"
 
 [[ $- == *i* ]] || return
 {{- if eq .chezmoi.os "linux" }}
@@ -144,7 +193,6 @@ function brewski {
 	echo "brewski: failed: ${failed[*]}" >&2
 	return 1
 }
-export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
 JAVA_HOME="$(brew --prefix)/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home"
 export JAVA_HOME
 {{- end }}
@@ -179,53 +227,6 @@ function brewski {
 	return 1
 }
 {{- end }}
-export PATH="$HOME/.local/bin:$PATH"
-
-# opentofu
-export TERRAFORM_BINARY_NAME=tofu
-
-# bin
-export PATH="$PATH:/bin"
-export PATH="$PATH:/usr/bin"
-export PATH="$PATH:/usr/local/bin"
-export PATH="$PATH:/$HOME/.local/bin"
-export PATH="$PATH:/sbin"
-export PATH="$PATH:/usr/sbin"
-export PATH="$PATH:/usr/local/sbin"
-export PATH="$PATH:$HOME/.cargo/bin"
-export PATH="$PATH:$HOME/.yarn/bin"
-{{- if eq .chezmoi.os "linux" }}
-
-# Personal toolchains on the Linux laptop, all under $HOME.
-export PATH="$HOME/.local/go/bin:$HOME/.local/share/pi-node/current/bin:$PATH"
-export JAVA_HOME="$HOME/opt/jdk21"
-export PATH="$JAVA_HOME/bin:$HOME/opt/maven/bin:$PATH"
-# pi and its subagents start faster with a persistent V8 compile cache.
-export NODE_COMPILE_CACHE="$HOME/.cache/node-compile-cache"
-# 443 is free on this laptop; the Macs move mobile-agent off it for OrbStack.
-export MA_TAILSCALE_HTTPS_PORT=443
-# gentle-engram needs engram >= 2.0.0-rc.11 for instance-id, but the shared
-# engram.service runs 1.20.0. ENGRAM_URL makes it adopt that server and skip
-# the binary check. Drop this once Engram is upgraded.
-export ENGRAM_URL="http://127.0.0.1:7437"
-{{- end }}
-{{- if eq .chezmoi.os "darwin" }}
-export PATH="$PATH:/usr/local/opt/openjdk/bin"
-
-# python
-export PATH="$PATH:$HOME/Library/Python/3.9/bin"
-
-# node - https://nodejs.org
-export N_PREFIX="$HOME/n"; [[ :$PATH: == *":$N_PREFIX/bin:"* ]] || PATH+=":$N_PREFIX/bin"
-{{- end }}
-
-# go - https://golang.org/
-export GOPATH="$HOME/go"
-if command -v go >/dev/null; then
-	GOBIN="$(go env GOBIN)"
-	export GOBIN
-fi
-export PATH="$PATH:$GOPATH/bin"
 
 # neovim - https://neovim.io
 # set -o vi
