@@ -22,25 +22,27 @@ while IFS=$'\t' read -r domain item position; do
 	defaults write "$domain" "NSStatusItem Preferred Position $item" -float "$position"
 done <<'EOF'
 com.apple.controlcenter	BentoBox	134
-com.apple.controlcenter	BentoBox-0	144
-com.apple.controlcenter	Battery	273
-tailtray	Item-0	290
-pl.maketheweb.cleanshotx	Item-0	315
-com.dwarvesv.minimalbar	hiddenbar_expandcollapse	341
-app.tuple.app	TupleStatusBarItem	349
-com.dwarvesv.minimalbar	hiddenbar_separate	373
-com.apple.controlcenter	WiFi	395
-org.pqrs.Karabiner-Menu	Item-0	447
-io.tailscale.ipn.macsys	Item-0	501
-com.1password.1password	bb3cc23c-6950-4e96-8b40-850e09f46934	539
-org.herf.Flux	Item-0	571
-com.dwarvesv.minimalbar	hiddenbar_terminate	591
-com.intelliscapesolutions.caffeine	Item-0	602
-keybase.Electron	Item-0	648
-me.paolino.fastpotify	Item-0	686
-org.pqrs.Karabiner-Console-User-Server	Item-0	756
-dev.kdrag0n.MacVirt	Item-0	785
-com.rippling.it.tray	Item-0	823
+com.apple.controlcenter	BentoBox-0	142
+com.dwarvesv.minimalbar	hiddenbar_expandcollapse	184
+com.hhsnopek.utc-clock	Item-0	216
+tailtray	Item-0	320
+com.apple.controlcenter	WiFi	352
+com.apple.controlcenter	Battery	390
+pl.maketheweb.cleanshotx	Item-0	432
+app.tuple.app	TupleStatusBarItem	466
+com.dwarvesv.minimalbar	hiddenbar_separate	512
+com.1password.1password	bb3cc23c-6950-4e96-8b40-850e09f46934	548
+org.herf.Flux	Item-0	580
+com.intelliscapesolutions.caffeine	Item-0	611
+{{- if not .tailscaleSSH }}
+io.tailscale.ipn.macsys	Item-0	640
+{{- end }}
+com.dwarvesv.minimalbar	hiddenbar_terminate	657
+org.pqrs.Karabiner-Console-User-Server	Item-0	693
+com.rippling.it.tray	Item-0	722
+keybase.Electron	Item-0	758
+dev.kdrag0n.MacVirt	Item-0	796
+rocks.spotifast.Spotifast	Item-0	834
 EOF
 defaults write com.apple.controlcenter "NSStatusItem Visible BentoBox" -bool true
 for i in 0 1 2 3 4 5 6 7; do
