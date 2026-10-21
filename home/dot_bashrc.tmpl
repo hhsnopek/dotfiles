@@ -156,15 +156,19 @@ unalias brewski 2>/dev/null
 # plain `brew upgrade` skips. Every step runs even when an earlier one fails,
 # but brew catches ^C and exits 130, so any signal status stops the rest.
 function brewski {
-	local step status failed=() keg old audio
+	local step status failed=() keg old audio tmux
 	audio=$(brew list --cask --versions proxy-audio-device 2>/dev/null)
-	for step in update upgrade audio{{ if .tailscaleSSH }} tailscale{{ end }} cleanup doctor rust uv npm nvim; do
+	tmux=$(brew list --versions tmux 2>/dev/null)
+	for step in update upgrade audio tmux{{ if .tailscaleSSH }} tailscale{{ end }} cleanup doctor rust uv npm nvim; do
 		case $step in
 		# --fetch-HEAD rebuilds formulae installed from a branch, like utc-clock.
 		upgrade) brew upgrade --greedy --yes --fetch-HEAD ;;
 		# The cask restarts coreaudiod after installing its driver, but that
 		# restart can come up without Proxy Audio Device; a second one loads it.
 		audio) [[ $(brew list --cask --versions proxy-audio-device 2>/dev/null) == "$audio" ]] || sudo killall coreaudiod ;;
+		# Full Disk Access holds tmux by its per-version Cellar path, so an
+		# upgrade orphans the grant and op inside tmux prompts again.
+		tmux) [[ $(brew list --versions tmux 2>/dev/null) == "$tmux" ]] || echo "brewski: tmux upgraded; run tmux-sign so tmux keeps Full Disk Access" >&2 ;;
 {{- if .tailscaleSSH }}
 		# `sudo brew services` leaves the running keg's bin owned by root, so
 		# cleanup cannot delete it once an upgrade replaces it. Move the daemon
