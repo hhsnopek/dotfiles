@@ -1,0 +1,22 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+# Reruns when the theme changes: {{ include ".spotifast/Distilled.json" | sha256sum }}
+set -euo pipefail
+eval "$(/opt/homebrew/bin/brew shellenv)"
+dir="$HOME/Library/Application Support/me.paolino.spotifast"
+mkdir -p "$dir/themes"
+cp {{ joinPath .chezmoi.sourceDir ".spotifast/Distilled.json" | quote }} "$dir/themes/Distilled.json"
+
+# Spotifast saves its in-memory settings over the file, so these only stick
+# while it is closed. Missing settings fall back to defaults. Album art would
+# otherwise tint each page away from the theme.
+if pgrep -x Spotifast >/dev/null; then
+	/Applications/Spotifast.app/Contents/MacOS/Spotifast reload-themes
+	echo "chezmoi: quit Spotifast, then chezmoi apply again, to select the Distilled theme" >&2
+	exit 1
+fi
+settings="$dir/settings.json"
+[ -f "$settings" ] || echo '{}' >"$settings"
+jq '.custom_theme = "Distilled.json" | .accent_from_art = false | del(.custom_theme_cache)' "$settings" >"$settings.tmp"
+mv "$settings.tmp" "$settings"
+{{ end -}}
