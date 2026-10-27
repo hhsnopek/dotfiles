@@ -1,6 +1,6 @@
 {{ if eq .chezmoi.os "darwin" -}}
 #!/bin/bash
-# Reruns when the shortcut export changes: {{ include ".macos/symbolichotkeys.plist" | sha256sum }}
+# Reruns when the shortcut exports change: {{ include ".macos/symbolichotkeys.plist" | sha256sum }} {{ include ".macos/tuple-mute-hotkey.plist" | sha256sum }}
 set -euo pipefail
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
@@ -150,6 +150,12 @@ defaults write pl.maketheweb.cleanshotx snapInAnnotateCrop -bool true
 defaults write pl.maketheweb.cleanshotx SUAutomaticallyUpdate -bool false
 defaults write pl.maketheweb.cleanshotx SUEnableAutomaticChecks -bool false
 defaults write pl.maketheweb.cleanshotx transparentWindowBackground -bool false
+
+# Global microphone mute. Zoom stores only the on flag while the shortcut stays
+# at its default (⌘⇧A). Tuple has no default; the plist is an archived
+# MASShortcut for ⌥⌘A, the format Tuple reads.
+defaults write us.zoom.xos.Hotkey "[gHK@state]-HotkeyOnOffAudio" -bool true
+defaults write app.tuple.app GlobalTupleMuteHotkey -data "$(plutil -convert binary1 -o - {{ joinPath .chezmoi.sourceDir ".macos/tuple-mute-hotkey.plist" | quote }} | xxd -p | tr -d '\n')"
 
 killall Dock Finder SystemUIServer ControlCenter 2>/dev/null || true
 {{ end -}}
