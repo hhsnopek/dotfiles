@@ -15,34 +15,35 @@ defaults write com.apple.menuextra.clock ShowDate -int 0
 defaults write com.apple.menuextra.clock ShowDayOfWeek -bool true
 defaults write com.apple.menuextra.clock TimeAnnouncementsEnabled -bool false
 
-# Menu bar. Positions are pixel offsets from the right edge, read when each
-# app launches; Hidden Bar hides whatever sits left of its two dividers, so
-# these numbers decide which icons show.
-while IFS=$'\t' read -r domain item position; do
-	defaults write "$domain" "NSStatusItem Preferred Position $item" -float "$position"
+# Menu bar order. macOS 27 ignores each app's "NSStatusItem Preferred
+# Position" and keeps one store instead, read live, with offsets leftward from
+# the clock. Apps without a bundle are keyed by process name. Collapsed, Hidden
+# Bar shows only Apple's icons and team-signed apps right of its arrow.
+store="$HOME/Library/Group Containers/com.apple.MenuBar/Library/Preferences/com.apple.MenuBar"
+while IFS=$'\t' read -r item position; do
+	defaults write "$store" TrailingItemPreferredPositions -dict-add "$item" "<integer>$position</integer>"
 done <<'EOF'
-com.apple.controlcenter	BentoBox	134
-com.apple.controlcenter	BentoBox-0	142
-com.dwarvesv.minimalbar	hiddenbar_expandcollapse	184
-com.hhsnopek.utc-clock	Item-0	216
-tailtray	Item-0	320
-com.apple.controlcenter	WiFi	352
-com.apple.controlcenter	Battery	390
-pl.maketheweb.cleanshotx	Item-0	432
-app.tuple.app	TupleStatusBarItem	466
-com.dwarvesv.minimalbar	hiddenbar_separate	512
-com.1password.1password	bb3cc23c-6950-4e96-8b40-850e09f46934	548
-org.herf.Flux	Item-0	580
-com.intelliscapesolutions.caffeine	Item-0	611
+module:BentoBox-0	111
+status:com.dwarvesv.minimalbar::hiddenbar_expandcollapse	137
+status:UTCClock::Item-0	169
+status:tailtray::Item-0	273
+module:WiFi	305
+module:Battery	327
+status:com.dwarvesv.minimalbar::hiddenbar_separate	353
+status:app.tuple.app::TupleStatusBarItem	389
+status:pl.maketheweb.cleanshotx::Item-0	435
+status:org.herf.Flux::Item-0	469
+status:com.1password.1password::bb3cc23c-6950-4e96-8b40-850e09f46934	500
+status:com.intelliscapesolutions.caffeine::Item-0	532
 {{- if not .tailscaleSSH }}
-io.tailscale.ipn.macsys	Item-0	640
+status:io.tailscale.ipn.macsys::Item-0	555
 {{- end }}
-com.dwarvesv.minimalbar	hiddenbar_terminate	657
-org.pqrs.Karabiner-Console-User-Server	Item-0	693
-com.rippling.it.tray	Item-0	722
-keybase.Electron	Item-0	758
-dev.kdrag0n.MacVirt	Item-0	796
-rocks.spotifast.Spotifast	Item-0	834
+status:org.pqrs.Karabiner-Console-User-Server::Item-0	578
+status:rocks.spotifast.Spotifast::Item-0	607
+status:Rippling Tray::Item-0	641
+status:keybase.Electron::Item-0	677
+status:dev.kdrag0n.MacVirt::Item-0	715
+status:com.dwarvesv.minimalbar::hiddenbar_terminate	753
 EOF
 defaults write com.apple.controlcenter "NSStatusItem Visible BentoBox" -bool true
 for i in 0 1 2 3 4 5 6 7; do
